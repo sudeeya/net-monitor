@@ -6,15 +6,18 @@ import (
 	"github.com/sudeeya/net-monitor/internal/pkg/converter"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"github.com/sudeeya/net-monitor/internal/server/services"
+	"go.uber.org/zap"
 )
 
 type snapshotsGRPCServer struct {
 	pb.UnimplementedSnapshotsServer
+	logger  *zap.Logger
 	service services.SnapshotsService
 }
 
-func NewSnapshotsGRPCServer(service services.SnapshotsService) *snapshotsGRPCServer {
+func NewSnapshotsGRPCServer(logger *zap.Logger, service services.SnapshotsService) *snapshotsGRPCServer {
 	return &snapshotsGRPCServer{
+		logger:  logger,
 		service: service,
 	}
 }

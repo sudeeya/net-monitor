@@ -6,17 +6,20 @@ import (
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/repository"
 	"github.com/sudeeya/net-monitor/internal/server/services"
+	"go.uber.org/zap"
 )
 
 var _ services.SnapshotsService = (*snapshots)(nil)
 
 type snapshots struct {
-	repo repository.Repository
+	logger *zap.Logger
+	repo   repository.Repository
 }
 
-func NewSnapshots(repo repository.Repository) *snapshots {
+func NewSnapshots(logger *zap.Logger, repo repository.Repository) *snapshots {
 	return &snapshots{
-		repo: repo,
+		logger: logger,
+		repo:   repo,
 	}
 }
 

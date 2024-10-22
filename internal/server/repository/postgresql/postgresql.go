@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/repository"
+	"go.uber.org/zap"
 )
 
 const driverName string = "pgx"
@@ -14,17 +15,19 @@ const driverName string = "pgx"
 var _ repository.Repository = (*postgreSQL)(nil)
 
 type postgreSQL struct {
-	db *sqlx.DB
+	logger *zap.Logger
+	db     *sqlx.DB
 }
 
-func NewPostgreSQL(dsn string) (*postgreSQL, error) {
+func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	db, err := sqlx.Open(driverName, dsn)
 	if err != nil {
 		return nil, err
 	}
 
 	return &postgreSQL{
-		db: db,
+		logger: logger,
+		db:     db,
 	}, nil
 }
 

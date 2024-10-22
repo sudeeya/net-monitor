@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sudeeya/net-monitor/internal/pkg/logging"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"github.com/sudeeya/net-monitor/internal/server/api"
@@ -25,19 +24,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repo, err := postgresql.NewPostgreSQL("")
+	repo, err := postgresql.NewPostgreSQL(logger, "")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	service := snapshots.NewSnapshots(repo)
+	service := snapshots.NewSnapshots(logger, repo)
 
 	grpcServer := grpc.NewServer()
-	snapshotsGRPCServer := api.NewSnapshotsGRPCServer(service)
+	snapshotsGRPCServer := api.NewSnapshotsGRPCServer(logger, service)
 	pb.RegisterSnapshotsServer(grpcServer, snapshotsGRPCServer)
 
-	mux := chi.NewRouter()
-	snapshotsHTTPServer := api.NewSnapshotsHTTPServer(mux, service)
+	snapshotsHTTPServer := api.NewSnapshotsHTTPServer(logger, service)
 
 	a := app.NewApp(cfg, logger, repo, snapshotsHTTPServer, grpcServer)
 
