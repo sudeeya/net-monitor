@@ -25,7 +25,12 @@ func NewSnapshotsGRPCServer(logger *zap.Logger, service services.SnapshotsServic
 func (s *snapshotsGRPCServer) SaveSnapshot(ctx context.Context, request *pb.SaveSnapshotRequest) (*pb.SaveSnapshotResponse, error) {
 	var response pb.SaveSnapshotResponse
 
-	if err := s.service.SaveSnapshot(ctx, *converter.ToSnapshotFromProto(request.Snapshot)); err != nil {
+	snapshot, err := converter.ToSnapshotFromProto(request.Snapshot)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.service.SaveSnapshot(ctx, *snapshot); err != nil {
 		response.Error = err.Error()
 		return &response, err
 	}

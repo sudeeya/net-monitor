@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"net"
+	"time"
+)
 
 type Timestamp time.Time
 
@@ -16,7 +19,8 @@ type Device struct {
 
 type Interface struct {
 	Name      string
-	IPAddress string
+	IP        net.IP
+	IPNet     *net.IPNet
 	MTU       int64
 	Bandwidth int64
 }
