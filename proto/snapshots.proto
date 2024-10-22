@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package snapshots;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/sudeeya/net-monitor/internal/pkg/pb";
+
+service Snapshots {
+    rpc SaveSnapshot(SaveSnapshotRequest) returns (SaveSnapshotResponse);
+}
+
+message SaveSnapshotRequest {
+    Snapshot snapshot = 1;
+}
+
+message SaveSnapshotResponse {
+    string error = 1;
+}
+
+message Snapshot {
+    google.protobuf.Timestamp timestamp = 1;
+    message Device {
+        string vendor = 1;
+        message Interface {
+            string name = 1;
+            string ip_address = 2;
+            int64 mtu = 3;
+            int64 bandwidth = 4;
+        }
+        repeated Interface interfaces = 2;
+    }
+    repeated Device devices = 2;
+}
