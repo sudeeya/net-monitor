@@ -13,6 +13,12 @@ type snapshotsGRPCServer struct {
 	service services.SnapshotsService
 }
 
+func NewSnapshotsGRPCServer(service services.SnapshotsService) *snapshotsGRPCServer {
+	return &snapshotsGRPCServer{
+		service: service,
+	}
+}
+
 func (s *snapshotsGRPCServer) SaveSnapshot(ctx context.Context, request *pb.SaveSnapshotRequest) (*pb.SaveSnapshotResponse, error) {
 	var response pb.SaveSnapshotResponse
 
@@ -22,10 +28,4 @@ func (s *snapshotsGRPCServer) SaveSnapshot(ctx context.Context, request *pb.Save
 	}
 
 	return &response, nil
-}
-
-func NewSnapshotsGRPCServer(service services.SnapshotsService) *snapshotsGRPCServer {
-	return &snapshotsGRPCServer{
-		service: service,
-	}
 }

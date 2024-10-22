@@ -6,13 +6,13 @@ import (
 )
 
 type snapshotsHTTPServer struct {
-	handler *chi.Mux
+	*chi.Mux
 	service services.SnapshotsService
 }
 
-func NewSnapshotsHTTPServer(handler *chi.Mux, service services.SnapshotsService) *snapshotsHTTPServer {
+func NewSnapshotsHTTPServer(mux *chi.Mux, service services.SnapshotsService) *snapshotsHTTPServer {
 	return &snapshotsHTTPServer{
-		handler: handler,
+		Mux:     mux,
 		service: service,
 	}
 }

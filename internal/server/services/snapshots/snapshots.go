@@ -8,24 +8,30 @@ import (
 	"github.com/sudeeya/net-monitor/internal/server/services"
 )
 
-var _ services.SnapshotsService = (*Snapshots)(nil)
+var _ services.SnapshotsService = (*snapshots)(nil)
 
-type Snapshots struct {
+type snapshots struct {
 	repo repository.Repository
 }
 
-func (s *Snapshots) DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error {
+func NewSnapshots(repo repository.Repository) *snapshots {
+	return &snapshots{
+		repo: repo,
+	}
+}
+
+func (s *snapshots) DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error {
 	panic("unimplemented")
 }
 
-func (s *Snapshots) GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error) {
+func (s *snapshots) GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error) {
 	panic("unimplemented")
 }
 
-func (s *Snapshots) ListTimestamps(ctx context.Context) ([]model.Timestamp, error) {
+func (s *snapshots) ListTimestamps(ctx context.Context) ([]model.Timestamp, error) {
 	panic("unimplemented")
 }
 
-func (s *Snapshots) SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error {
+func (s *snapshots) SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error {
 	panic("unimplemented")
 }
