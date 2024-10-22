@@ -19,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger, err := logging.NewLogger()
+	logger, err := logging.NewLogger(cfg.LogLevel, cfg.LogFile)
 	if err != nil {
 		log.Fatal(err)
 	}
