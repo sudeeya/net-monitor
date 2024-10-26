@@ -9,6 +9,6 @@ import (
 type SnapshotsService interface {
 	SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error
 	GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error)
-	ListTimestamps(ctx context.Context) ([]model.Timestamp, error)
+	GetNTimestamps(ctx context.Context, n int) ([]model.Timestamp, error)
 	DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error
 }

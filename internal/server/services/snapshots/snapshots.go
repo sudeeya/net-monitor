@@ -24,17 +24,35 @@ func NewSnapshots(logger *zap.Logger, repo repository.Repository) *snapshots {
 }
 
 func (s *snapshots) DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error {
-	panic("unimplemented")
+	if err := s.repo.DeleteSnapshot(ctx, timestamp); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *snapshots) GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error) {
-	panic("unimplemented")
+	snapshot, err := s.repo.GetSnapshot(ctx, timestamp)
+	if err != nil {
+		return model.Snapshot{}, err
+	}
+
+	return snapshot, nil
 }
 
-func (s *snapshots) ListTimestamps(ctx context.Context) ([]model.Timestamp, error) {
-	panic("unimplemented")
+func (s *snapshots) GetNTimestamps(ctx context.Context, n int) ([]model.Timestamp, error) {
+	timestamps, err := s.repo.GetNTimestamps(ctx, n)
+	if err != nil {
+		return nil, err
+	}
+
+	return timestamps, nil
 }
 
 func (s *snapshots) SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error {
-	panic("unimplemented")
+	if err := s.repo.StoreSnapshot(ctx, snapshot); err != nil {
+		return err
+	}
+
+	return nil
 }
