@@ -22,13 +22,18 @@ message Snapshot {
     google.protobuf.Timestamp timestamp = 1;
     message Device {
         string vendor = 1;
+        string os_name = 2;
+        string os_version = 3;
+        string serial = 4;
+        string management_ip = 5;
         message Interface {
             string name = 1;
-            string ip_address = 2;
-            int64 mtu = 3;
-            int64 bandwidth = 4;
+            string mac = 2;
+            string ip = 3;
+            int64 mtu = 4;
+            int64 bandwidth = 5;
         }
-        repeated Interface interfaces = 2;
+        repeated Interface interfaces = 6;
     }
     repeated Device devices = 2;
 }
