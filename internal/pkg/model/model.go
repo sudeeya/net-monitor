@@ -1,6 +1,7 @@
 package model
 
 import (
+	"net"
 	"net/netip"
 	"time"
 )
@@ -23,7 +24,7 @@ type Device struct {
 
 type Interface struct {
 	Name      string
-	MAC       string
+	MAC       net.HardwareAddr
 	IP        netip.Prefix
 	MTU       int64
 	Bandwidth int64

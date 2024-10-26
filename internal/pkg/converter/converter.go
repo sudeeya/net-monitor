@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"net"
 	"net/netip"
 
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
@@ -53,6 +54,11 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 }
 
 func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface, error) {
+	mac, err := net.ParseMAC(iface.Mac)
+	if err != nil {
+		return nil, err
+	}
+
 	ip, err := netip.ParsePrefix(iface.Ip)
 	if err != nil {
 		return nil, err
@@ -60,7 +66,7 @@ func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface
 
 	return &model.Interface{
 		Name:      iface.Name,
-		MAC:       iface.Mac,
+		MAC:       mac,
 		IP:        ip,
 		MTU:       iface.Mtu,
 		Bandwidth: iface.Bandwidth,
