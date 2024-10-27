@@ -3,7 +3,8 @@ package config
 import "github.com/caarlos0/env"
 
 type Config struct {
-	Address     string `env:"ADDRESS" envDefault:"localhost:8080"`
+	HTTPAddr    string `env:"HTTP_ADDR" envDefault:"localhost:8080"`
+	GRPCAddr    string `env:"GRPC_ADDR" envDefault:"localhost:9090"`
 	DatabaseDSN string `env:"DATABASE_DSN,required"`
 	LogLevel    string `env:"LOG_LEVEL" envDefault:"INFO"`
 	LogFile     string `env:"LOG_FILE,required"`
