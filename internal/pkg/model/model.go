@@ -14,6 +14,7 @@ type Snapshot struct {
 }
 
 type Device struct {
+	Hostname     string
 	Vendor       string
 	OSName       string
 	OSVersion    string

@@ -44,6 +44,7 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 	}
 
 	return &model.Device{
+		Hostname:     device.Hostname,
 		Vendor:       device.Vendor,
 		OSName:       device.OsName,
 		OSVersion:    device.OsVersion,
