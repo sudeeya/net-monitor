@@ -1,6 +1,9 @@
 package app
 
 import (
+	"errors"
+	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -64,8 +67,9 @@ func (a *app) Run() {
 }
 
 func (a *app) Shutdown() {
-	if err := a.logger.Sync(); err != nil {
-		a.logger.Sugar().Fatalf("failed to sync logger: %v", err)
+	var pathErr fs.PathError
+	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {
+		fmt.Fprintf(os.Stdout, "failed to sync logger: %v\n", err)
 	}
 
 	os.Exit(0)

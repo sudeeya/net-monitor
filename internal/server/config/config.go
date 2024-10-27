@@ -7,7 +7,7 @@ type Config struct {
 	GRPCAddr    string `env:"GRPC_ADDR" envDefault:"localhost:9090"`
 	DatabaseDSN string `env:"DATABASE_DSN,required"`
 	LogLevel    string `env:"LOG_LEVEL" envDefault:"INFO"`
-	LogFile     string `env:"LOG_FILE,required"`
+	LogFile     string `env:"LOG_FILE"`
 }
 
 func NewConfig() (*Config, error) {

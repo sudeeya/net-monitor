@@ -27,7 +27,9 @@ func NewLogger(logLevel, logFile string) (*zap.Logger, error) {
 		return nil, fmt.Errorf("unknown log level: %s", logLevel)
 	}
 
-	cfg.OutputPaths = append(cfg.OutputPaths, logFile)
+	if logFile != "" {
+		cfg.OutputPaths = append(cfg.OutputPaths, logFile)
+	}
 
 	return cfg.Build()
 }
