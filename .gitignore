@@ -27,3 +27,6 @@ go.work.sum
 # IDEs directories
 .idea
 .vscode
+
+# Environment files
+*.env
