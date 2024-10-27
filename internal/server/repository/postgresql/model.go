@@ -7,6 +7,7 @@ import (
 )
 
 type dbTimestamp struct {
+	id        int       `db:"id"`
 	timestamp time.Time `db:"timestamp"`
 }
 

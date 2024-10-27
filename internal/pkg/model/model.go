@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-type Timestamp time.Time
+type ID int
 
 type Snapshot struct {
-	Timestamp Timestamp
+	Timestamp time.Time
 	Devices   []Device
 }
 

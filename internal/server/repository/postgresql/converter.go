@@ -1,20 +1,8 @@
 package postgresql
 
 import (
-	"time"
-
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 )
-
-func toDBFromTimestamp(t model.Timestamp) dbTimestamp {
-	return dbTimestamp{
-		timestamp: time.Time(t),
-	}
-}
-
-func toTimestampFromDB(dbt dbTimestamp) model.Timestamp {
-	return model.Timestamp(dbt.timestamp)
-}
 
 func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	if len(parts) == 0 {
@@ -58,7 +46,7 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	}
 
 	return model.Snapshot{
-		Timestamp: model.Timestamp(parts[0].timestamp),
+		Timestamp: parts[0].timestamp,
 		Devices:   devices,
 	}
 }

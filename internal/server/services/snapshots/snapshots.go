@@ -2,6 +2,7 @@ package snapshots
 
 import (
 	"context"
+	"time"
 
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/repository"
@@ -23,16 +24,16 @@ func NewSnapshots(logger *zap.Logger, repo repository.Repository) *snapshots {
 	}
 }
 
-func (s *snapshots) DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error {
-	if err := s.repo.DeleteSnapshot(ctx, timestamp); err != nil {
+func (s *snapshots) DeleteSnapshot(ctx context.Context, id model.ID) error {
+	if err := s.repo.DeleteSnapshot(ctx, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *snapshots) GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error) {
-	snapshot, err := s.repo.GetSnapshot(ctx, timestamp)
+func (s *snapshots) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
+	snapshot, err := s.repo.GetSnapshot(ctx, id)
 	if err != nil {
 		return model.Snapshot{}, err
 	}
@@ -40,7 +41,7 @@ func (s *snapshots) GetSnapshot(ctx context.Context, timestamp model.Timestamp) 
 	return snapshot, nil
 }
 
-func (s *snapshots) GetNTimestamps(ctx context.Context, n int) ([]model.Timestamp, error) {
+func (s *snapshots) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
 	timestamps, err := s.repo.GetNTimestamps(ctx, n)
 	if err != nil {
 		return nil, err

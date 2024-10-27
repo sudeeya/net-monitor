@@ -21,7 +21,7 @@ func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 	}
 
 	return &model.Snapshot{
-		Timestamp: model.Timestamp(snapshot.Timestamp.AsTime()),
+		Timestamp: snapshot.Timestamp.AsTime(),
 		Devices:   devices,
 	}, nil
 }

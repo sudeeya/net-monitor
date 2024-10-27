@@ -95,7 +95,7 @@ FROM device_id d;
 
 const (
 	selectTimestampsQuery = `
-SELECT timestamp
+SELECT id, timestamp
 FROM snapshots
 ORDER BY timestamp DESC
 LIMIT @limit;
@@ -124,7 +124,7 @@ FROM
 	JOIN vendors v ON v.id = d.vendor_id
 	JOIN interfaces i ON d.id = i.device_id
 WHERE
-	s.timestamp = @timestamp
+	s.id = @id
 ORDER BY device_id ASC;
 `
 )
@@ -132,7 +132,7 @@ ORDER BY device_id ASC;
 const (
 	deleteSnapshotQuery = `
 DELETE FROM snapshots
-WHERE timestamp = @timestamp;
+WHERE id = @id;
 `
 )
 
@@ -190,7 +190,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 	}
 
 	snapshotArgs := pgx.NamedArgs{
-		"timestamp": toDBFromTimestamp(snapshot.Timestamp),
+		"timestamp": snapshot.Timestamp,
 	}
 	if _, err := tx.Exec(ctx, insertSnapshotQuery, snapshotArgs); err != nil {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
@@ -211,7 +211,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 		}
 
 		deviceArgs := pgx.NamedArgs{
-			"timestamp": toDBFromTimestamp(snapshot.Timestamp),
+			"timestamp": snapshot.Timestamp,
 			"vendor":    device.Vendor,
 			"hostname":  device.Hostname,
 			"os":        device.OSName,
@@ -246,7 +246,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 	return tx.Commit(ctx)
 }
 
-func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) ([]model.Timestamp, error) {
+func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
 	args := pgx.NamedArgs{
 		"limit": n,
 	}
@@ -261,17 +261,17 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) ([]model.Timesta
 		return nil, err
 	}
 
-	timestamps := make([]model.Timestamp, len(dbTimestamps))
+	timestamps := make(map[model.ID]time.Time, len(dbTimestamps))
 	for _, dbt := range dbTimestamps {
-		timestamps = append(timestamps, toTimestampFromDB(dbt))
+		timestamps[model.ID(dbt.id)] = dbt.timestamp
 	}
 
 	return timestamps, nil
 }
 
-func (p *postgreSQL) GetSnapshot(ctx context.Context, timestamp model.Timestamp) (model.Snapshot, error) {
+func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
 	args := pgx.NamedArgs{
-		"timestamp": toDBFromTimestamp(timestamp),
+		"id": int(id),
 	}
 	rows, err := p.db.Query(ctx, selectSnapshotQuery, args)
 	if err != nil {
@@ -287,9 +287,9 @@ func (p *postgreSQL) GetSnapshot(ctx context.Context, timestamp model.Timestamp)
 	return toSnapshotFromDB(dbSnapshotParts), nil
 }
 
-func (p *postgreSQL) DeleteSnapshot(ctx context.Context, timestamp model.Timestamp) error {
+func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id model.ID) error {
 	args := pgx.NamedArgs{
-		"timestamp": toDBFromTimestamp(timestamp),
+		"id": int(id),
 	}
 	if _, err := p.db.Exec(ctx, deleteSnapshotQuery, args); err != nil {
 		return err
