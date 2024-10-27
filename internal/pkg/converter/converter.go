@@ -67,8 +67,8 @@ func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface
 
 	return &model.Interface{
 		Name:      iface.Name,
-		MAC:       mac,
-		IP:        ip,
+		MAC:       model.MACAddr(mac),
+		IP:        model.IPAddr(ip),
 		MTU:       iface.Mtu,
 		Bandwidth: iface.Bandwidth,
 	}, nil
