@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repo, err := postgresql.NewPostgreSQL(logger, "")
+	repo, err := postgresql.NewPostgreSQL(logger, cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,9 +35,9 @@ func main() {
 	snapshotsGRPCServer := api.NewSnapshotsGRPCServer(logger, service)
 	pb.RegisterSnapshotsServer(grpcServer, snapshotsGRPCServer)
 
-	snapshotsHTTPServer := api.NewSnapshotsHTTPServer(logger, service)
+	httpServer := api.NewSnapshotsHTTPServer(logger, service)
 
-	a := app.NewApp(cfg, logger, repo, snapshotsHTTPServer, grpcServer)
+	a := app.NewApp(cfg, logger, repo, httpServer, grpcServer)
 
 	a.Run()
 }
