@@ -6,7 +6,51 @@ import (
 
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
+	devices := make([]*pb.Snapshot_Device, len(snapshot.Devices))
+
+	for _, device := range snapshot.Devices {
+		d := ToProtoFromDevice(device)
+		devices = append(devices, d)
+	}
+
+	return &pb.Snapshot{
+		Timestamp: timestamppb.New(snapshot.Timestamp),
+		Devices:   devices,
+	}
+}
+
+func ToProtoFromDevice(device model.Device) *pb.Snapshot_Device {
+	ifaces := make([]*pb.Snapshot_Device_Interface, len(device.Interfaces))
+
+	for _, iface := range device.Interfaces {
+		i := ToProtoFromInterface(iface)
+		ifaces = append(ifaces, i)
+	}
+
+	return &pb.Snapshot_Device{
+		Hostname:     device.Hostname,
+		Vendor:       device.Vendor,
+		OsName:       device.OSName,
+		OsVersion:    device.OSVersion,
+		Serial:       device.Serial,
+		ManagementIp: netip.Prefix(device.ManagementIP).String(),
+		Interfaces:   ifaces,
+	}
+}
+
+func ToProtoFromInterface(iface model.Interface) *pb.Snapshot_Device_Interface {
+	return &pb.Snapshot_Device_Interface{
+		Name:      iface.Name,
+		Mac:       net.HardwareAddr(iface.MAC).String(),
+		Ip:        netip.Prefix(iface.IP).String(),
+		Mtu:       iface.MTU,
+		Bandwidth: iface.Bandwidth,
+	}
+}
 
 func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 	devices := make([]model.Device, len(snapshot.Devices))
@@ -49,7 +93,7 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 		OSName:       device.OsName,
 		OSVersion:    device.OsVersion,
 		Serial:       device.Serial,
-		ManagementIP: managementIP,
+		ManagementIP: model.IPAddr(managementIP),
 		Interfaces:   ifaces,
 	}, nil
 }

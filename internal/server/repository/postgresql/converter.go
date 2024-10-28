@@ -30,7 +30,7 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 				OSName:       part.osName,
 				OSVersion:    part.osVersion,
 				Serial:       part.serialNumber,
-				ManagementIP: part.managementIP,
+				ManagementIP: model.IPAddr(part.managementIP),
 				Interfaces:   ifaces,
 			})
 		default:
