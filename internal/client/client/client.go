@@ -35,7 +35,12 @@ func (c *Client) UploadSnapshot() error {
 	ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 	defer cancel()
 
-	snapshot := converter.ToProtoFromSnapshot(c.snapper.Snap())
+	s, err := c.snapper.Snap()
+	if err != nil {
+		return err
+	}
+
+	snapshot := converter.ToProtoFromSnapshot(s)
 
 	response, err := c.client.SaveSnapshot(ctx, &pb.SaveSnapshotRequest{Snapshot: snapshot})
 	if err != nil {

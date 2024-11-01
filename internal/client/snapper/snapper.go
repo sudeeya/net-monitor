@@ -5,5 +5,5 @@ import (
 )
 
 type Snapper interface {
-	Snap() *model.Snapshot
+	Snap() (*model.Snapshot, error)
 }
