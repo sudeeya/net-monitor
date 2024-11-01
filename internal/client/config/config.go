@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	ServerAddr   string        `env:"SEERVER_ADDR" envDefault:"localhost:9090"`
+	ServerAddr   string        `env:"SERVER_ADDR" envDefault:"localhost:9090"`
 	TargetsFile  string        `env:"TARGETS_FILE,required"`
 	SnapInterval time.Duration `env:"SNAP_INTERVAL" envDefault:"10m"`
 	LogLevel     string        `env:"LOG_LEVEL" envDefault:"INFO"`
