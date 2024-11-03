@@ -125,39 +125,44 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 				iface := model.Interface{}
 
 				for _, output := range template.outputs {
+					value := p[output].(string)
+					if value == "" {
+						continue
+					}
+
 					switch output {
 					case versionOutput:
-						device.OSVersion = p[output].(string)
+						device.OSVersion = value
 					case serialOutput:
-						device.Serial = p[output].(string)
+						device.Serial = value
 					case managementIPOutput:
-						ip, err := netip.ParsePrefix(p[output].(string))
+						ip, err := netip.ParsePrefix(value)
 						if err != nil {
 							return nil, err
 						}
 						device.ManagementIP = model.IPAddr(ip)
 					case interfaceOutput:
-						iface.Name = p[output].(string)
+						iface.Name = value
 					case macAddressOutput:
-						mac, err := net.ParseMAC(p[output].(string))
+						mac, err := net.ParseMAC(value)
 						if err != nil {
 							return nil, err
 						}
 						iface.MAC = model.MACAddr(mac)
 					case ipAddressOutput:
-						ip, err := netip.ParsePrefix(p[output].(string))
+						ip, err := netip.ParsePrefix(value)
 						if err != nil {
 							return nil, err
 						}
 						iface.IP = model.IPAddr(ip)
 					case mtuOutput:
-						mtu, err := strconv.Atoi(p[output].(string))
+						mtu, err := strconv.Atoi(value)
 						if err != nil {
 							return nil, err
 						}
 						iface.MTU = int64(mtu)
 					case bandwidthOutput:
-						bandwidth, err := strconv.Atoi(p[output].(string))
+						bandwidth, err := strconv.Atoi(value)
 						if err != nil {
 							return nil, err
 						}
