@@ -46,10 +46,10 @@ CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
 	name VARCHAR(255),
-	mac MACADDR NOT NULL,
+	mac MACADDR,
 	ip INET,
-	mtu INT NOT NULL,
-	bandwidth INT NOT NULL
+	mtu INT,
+	bandwidth INT
 );
 `
 )
@@ -67,11 +67,11 @@ VALUES (@vendor);
 
 	insertDeviceQuery = `
 WITH snapshot_id AS (
-    SELECT id
+	SELECT id
 	FROM snapshots
 	WHERE timestamp = @timestamp
 ), vendor_id AS (
-    SELECT id
+	SELECT id
 	FROM vendors 
 	WHERE name = @vendor
 )
@@ -82,7 +82,7 @@ FROM snapshot_id s, vendor_id v;
 
 	insertInterfaceQuery = `
 WITH device_id AS (
-    SELECT id
+	SELECT id
 	FROM devices 
 	ORDER BY id DESC
 	LIMIT 1
