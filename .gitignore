@@ -30,3 +30,7 @@ go.work.sum
 
 # Environment files
 *.env
+
+# Containerlab lab directories and backup files
+clab/*/clab*
+*.clab.yml.bak
