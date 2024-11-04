@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  deploy-srlinux:
+    desc: Deploy the srlinux lab.
+    cmds:
+      - cd clab/srlinux && sudo containerlab deploy -t srl.clab.yml
+
+  destroy-srlinux:
+    desc: Destroy the srlinux lab.
+    cmds:
+      - cd clab/srlinux && sudo containerlab destroy -t srl.clab.yml --cleanup
