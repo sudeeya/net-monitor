@@ -29,7 +29,8 @@ go.work.sum
 .vscode
 
 # Environment files
-*.env
+client.env
+server.env
 
 # Containerlab lab directories and backup files
 clab/*/clab*
