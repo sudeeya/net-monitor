@@ -62,7 +62,8 @@ VALUES (@timestamp);
 
 	insertVendorQuery = `
 INSERT INTO vendors (name)
-VALUES (@vendor);
+VALUES (@vendor)
+ON CONFLICT (name) DO NOTHING;
 `
 
 	insertDeviceQuery = `

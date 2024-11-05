@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 
+	"github.com/joho/godotenv"
 	"github.com/sudeeya/net-monitor/internal/pkg/logging"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"github.com/sudeeya/net-monitor/internal/server/api"
@@ -14,6 +16,14 @@ import (
 )
 
 func main() {
+	envFile := flag.String("e", "env/server.env", "Path to the file storing environment variables")
+
+	flag.Parse()
+
+	if err := godotenv.Load(*envFile); err != nil {
+		log.Fatal(err)
+	}
+
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatal(err)

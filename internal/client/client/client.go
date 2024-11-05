@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const limitInSeconds = 5
+const limitInSeconds = 100
 
 type Client struct {
 	logger  *zap.Logger

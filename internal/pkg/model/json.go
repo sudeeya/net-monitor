@@ -17,3 +17,5 @@ func (mac MACAddr) MarshalJSON() ([]byte, error) {
 func (ip IPAddr) MarshalJSON() ([]byte, error) {
 	return json.Marshal(netip.Prefix(ip).String())
 }
+
+// TODO: move to api layer

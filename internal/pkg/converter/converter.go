@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"net"
 	"net/netip"
 
@@ -12,9 +13,8 @@ import (
 func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
 	devices := make([]*pb.Snapshot_Device, len(snapshot.Devices))
 
-	for _, device := range snapshot.Devices {
-		d := ToProtoFromDevice(device)
-		devices = append(devices, d)
+	for deviceIdx, device := range snapshot.Devices {
+		devices[deviceIdx] = ToProtoFromDevice(device)
 	}
 
 	return &pb.Snapshot{
@@ -26,9 +26,8 @@ func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
 func ToProtoFromDevice(device model.Device) *pb.Snapshot_Device {
 	ifaces := make([]*pb.Snapshot_Device_Interface, len(device.Interfaces))
 
-	for _, iface := range device.Interfaces {
-		i := ToProtoFromInterface(iface)
-		ifaces = append(ifaces, i)
+	for ifaceIdx, iface := range device.Interfaces {
+		ifaces[ifaceIdx] = ToProtoFromInterface(iface)
 	}
 
 	return &pb.Snapshot_Device{
@@ -55,13 +54,13 @@ func ToProtoFromInterface(iface model.Interface) *pb.Snapshot_Device_Interface {
 func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 	devices := make([]model.Device, len(snapshot.Devices))
 
-	for _, device := range snapshot.Devices {
+	for deviceIdx, device := range snapshot.Devices {
 		d, err := ToDeviceFromProto(device)
 		if err != nil {
 			return nil, err
 		}
 
-		devices = append(devices, *d)
+		devices[deviceIdx] = *d
 	}
 
 	return &model.Snapshot{
@@ -73,18 +72,22 @@ func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 	ifaces := make([]model.Interface, len(device.Interfaces))
 
-	managementIP, err := netip.ParsePrefix(device.ManagementIp)
-	if err != nil {
-		return nil, err
+	var managementIP netip.Prefix
+	if device.ManagementIp != "invalid Prefix" {
+		ip, err := netip.ParsePrefix(device.ManagementIp)
+		if err != nil {
+			return nil, err
+		}
+		managementIP = ip
 	}
 
-	for _, iface := range device.Interfaces {
+	for ifaceIdx, iface := range device.Interfaces {
 		i, err := ToInterfaceFromProto(iface)
 		if err != nil {
 			return nil, err
 		}
 
-		ifaces = append(ifaces, *i)
+		ifaces[ifaceIdx] = *i
 	}
 
 	return &model.Device{
@@ -93,26 +96,31 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 		OSName:       device.OsName,
 		OSVersion:    device.OsVersion,
 		Serial:       device.Serial,
-		ManagementIP: model.IPAddr(managementIP),
+		ManagementIP: managementIP,
 		Interfaces:   ifaces,
 	}, nil
 }
 
 func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface, error) {
-	mac, err := net.ParseMAC(iface.Mac)
-	if err != nil {
-		return nil, err
+	var mac net.HardwareAddr
+	if iface.Mac != "" {
+		m, err := net.ParseMAC(iface.Mac)
+		if err != nil {
+			return nil, err
+		}
+		mac = m
 	}
 
 	ip, err := netip.ParsePrefix(iface.Ip)
 	if err != nil {
+		fmt.Println("gugu")
 		return nil, err
 	}
 
 	return &model.Interface{
 		Name:      iface.Name,
-		MAC:       model.MACAddr(mac),
-		IP:        model.IPAddr(ip),
+		MAC:       mac,
+		IP:        ip,
 		MTU:       iface.Mtu,
 		Bandwidth: iface.Bandwidth,
 	}, nil

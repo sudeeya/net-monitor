@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/jackc/pgx/v5 v5.7.1
+	github.com/joho/godotenv v1.5.1
 	github.com/scrapli/scrapligo v1.3.2
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.67.1

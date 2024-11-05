@@ -18,8 +18,8 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 			ifaces := []model.Interface{
 				{
 					Name:      part.interfaceName,
-					MAC:       model.MACAddr(part.mac),
-					IP:        model.IPAddr(part.ip),
+					MAC:       part.mac,
+					IP:        part.ip,
 					MTU:       part.mtu,
 					Bandwidth: part.bandwidth,
 				},
@@ -30,14 +30,14 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 				OSName:       part.osName,
 				OSVersion:    part.osVersion,
 				Serial:       part.serialNumber,
-				ManagementIP: model.IPAddr(part.managementIP),
+				ManagementIP: part.managementIP,
 				Interfaces:   ifaces,
 			})
 		default:
 			iface := model.Interface{
 				Name:      part.interfaceName,
-				MAC:       model.MACAddr(part.mac),
-				IP:        model.IPAddr(part.ip),
+				MAC:       part.mac,
+				IP:        part.ip,
 				MTU:       part.mtu,
 				Bandwidth: part.bandwidth,
 			}

@@ -3,20 +3,22 @@ package snapshots
 import "fmt"
 
 const (
-	ciscoVendor = "CISCO"
+	nokiaVendor = "Nokia"
 )
 
 const (
-	ciscoIOS = "cisco_ios"
+	nokiaSRLinux = "nokia_srlinux"
 )
 
 const (
+	hostnameOutput     = "HOSTNAME"
+	osOutput           = "OS"
 	versionOutput      = "VERSION"
 	serialOutput       = "SERIAL"
 	managementIPOutput = "MANAGEMENT_IP"
 	interfaceOutput    = "INTERFACE"
 	macAddressOutput   = "MAC_ADDRESS"
-	ipAddressOutput    = "IP_ADDRESS"
+	ipv4Output         = "IPV4"
 	mtuOutput          = "MTU"
 	bandwidthOutput    = "BANDWIDTH"
 )
@@ -28,22 +30,23 @@ type template struct {
 }
 
 var (
-	ciscoIOSTemplates = []template{
+	nokiaSRLinuxTemplates = []template{
 		{
 			cmd:  "show version",
-			file: "templates/cisco_ios_show_version.textfsm",
+			file: "templates/nokia_srlinux_show_version.textfsm",
 			outputs: []string{
+				hostnameOutput,
+				osOutput,
 				versionOutput,
-				serialOutput,
 			},
 		},
 		{
-			cmd:  "show interfaces",
-			file: "templates/cisco_ios_show_interfaces.textfsm",
+			cmd:  "show interface detail",
+			file: "templates/nokia_srlinux_show_interface_detail.textfsm",
 			outputs: []string{
 				interfaceOutput,
 				macAddressOutput,
-				ipAddressOutput,
+				ipv4Output,
 				mtuOutput,
 				bandwidthOutput,
 			},
@@ -53,8 +56,8 @@ var (
 
 func getVendor(os string) (string, error) {
 	switch os {
-	case ciscoIOS:
-		return ciscoVendor, nil
+	case nokiaSRLinux:
+		return nokiaVendor, nil
 	default:
 		return "", fmt.Errorf("unknown operating system: %s", os)
 	}
@@ -62,8 +65,8 @@ func getVendor(os string) (string, error) {
 
 func getTemplates(os string) ([]template, error) {
 	switch os {
-	case ciscoIOS:
-		return ciscoIOSTemplates, nil
+	case nokiaSRLinux:
+		return nokiaSRLinuxTemplates, nil
 	default:
 		return nil, fmt.Errorf("unknown operating system: %s", os)
 	}

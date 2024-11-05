@@ -31,55 +31,22 @@ type target struct {
 	templates []template
 }
 
+type targetConfig struct {
+	OS       string `json:"os"`
+	Hostname string `json:"hostname"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
-	file, err := os.Open(targetsFile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	cfgs := make([]struct {
-		Hostname string `json:"hostname"`
-		Username string `json:"username"`
-		Password string `json:"password"`
-		OS       string `json:"os"`
-	}, 0)
-
-	err = json.NewDecoder(file).Decode(&cfgs)
+	cfgs, err := extractConfigs(targetsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	targets := make([]target, len(cfgs))
-
-	for _, cfg := range cfgs {
-		driver, err := generic.NewDriver(
-			cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthUsername(cfg.Username),
-			options.WithAuthPassword(cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		vendor, err := getVendor(cfg.OS)
-		if err != nil {
-			return nil, err
-		}
-
-		templates, err := getTemplates(cfg.OS)
-		if err != nil {
-			return nil, err
-		}
-
-		targets = append(targets, target{
-			hostname:  cfg.Hostname,
-			vendor:    vendor,
-			os:        cfg.OS,
-			driver:    driver,
-			templates: templates,
-		})
+	targets, err := formTargets(cfgs)
+	if err != nil {
+		return nil, err
 	}
 
 	return &snapshots{
@@ -125,7 +92,14 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 				iface := model.Interface{}
 
 				for _, output := range template.outputs {
-					value := p[output].(string)
+					if p == nil {
+						continue
+					}
+
+					value, ok := p[output].(string)
+					if !ok {
+						continue
+					}
 					if value == "" {
 						continue
 					}
@@ -140,7 +114,7 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 						if err != nil {
 							return nil, err
 						}
-						device.ManagementIP = model.IPAddr(ip)
+						device.ManagementIP = ip
 					case interfaceOutput:
 						iface.Name = value
 					case macAddressOutput:
@@ -148,13 +122,13 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 						if err != nil {
 							return nil, err
 						}
-						iface.MAC = model.MACAddr(mac)
-					case ipAddressOutput:
+						iface.MAC = mac
+					case ipv4Output:
 						ip, err := netip.ParsePrefix(value)
 						if err != nil {
 							return nil, err
 						}
-						iface.IP = model.IPAddr(ip)
+						iface.IP = ip
 					case mtuOutput:
 						mtu, err := strconv.Atoi(value)
 						if err != nil {
@@ -185,4 +159,56 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 		Timestamp: timestamp,
 		Devices:   devices,
 	}, connErrs
+}
+
+func extractConfigs(targetFile string) ([]targetConfig, error) {
+	file, err := os.Open(targetFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	cfgs := make([]targetConfig, 0)
+
+	if err := json.NewDecoder(file).Decode(&cfgs); err != nil {
+		return nil, err
+	}
+
+	return cfgs, nil
+}
+
+func formTargets(cfgs []targetConfig) ([]target, error) {
+	targets := make([]target, len(cfgs))
+
+	for cfgIdx, cfg := range cfgs {
+		driver, err := generic.NewDriver(
+			cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthUsername(cfg.Username),
+			options.WithAuthPassword(cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		vendor, err := getVendor(cfg.OS)
+		if err != nil {
+			return nil, err
+		}
+
+		templates, err := getTemplates(cfg.OS)
+		if err != nil {
+			return nil, err
+		}
+
+		targets[cfgIdx] = target{
+			hostname:  cfg.Hostname,
+			vendor:    vendor,
+			os:        cfg.OS,
+			driver:    driver,
+			templates: templates,
+		}
+	}
+
+	return targets, nil
 }
