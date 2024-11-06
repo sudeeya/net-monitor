@@ -42,10 +42,13 @@ func NewApp(
 }
 
 func (a *app) Run() {
+	a.logger.Info("Server is running")
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
 	go func() {
+		a.logger.Info("Listening for HTTP requests")
 		if err := http.ListenAndServe(a.cfg.HTTPAddr, a.handler); err != nil {
 			a.logger.Fatal(err.Error())
 		}
@@ -57,12 +60,14 @@ func (a *app) Run() {
 			a.logger.Fatal(err.Error())
 		}
 
+		a.logger.Info("Listening for gRPC requests")
 		if err := a.grpcServer.Serve(listen); err != nil {
 			a.logger.Fatal(err.Error())
 		}
 	}()
 
 	<-sigCh
+	a.logger.Info("Server is shutting down")
 	a.Shutdown()
 }
 

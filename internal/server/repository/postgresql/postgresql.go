@@ -148,11 +148,13 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 	defer cancel()
 
+	logger.Info("Establishing a connection to the database")
 	db, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
 
+	logger.Info("Creating necessary tables")
 	tx, err := db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
@@ -185,6 +187,8 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 }
 
 func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot) error {
+	p.logger.Info("Storing a snapshot to the database")
+
 	tx, err := p.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
@@ -248,6 +252,8 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 }
 
 func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
+	p.logger.Sugar().Infof("Getting the last %d timestamps from the database", n)
+
 	args := pgx.NamedArgs{
 		"limit": n,
 	}
@@ -271,6 +277,8 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]ti
 }
 
 func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
+	p.logger.Info("Getting a snapshot from the database")
+
 	args := pgx.NamedArgs{
 		"id": int(id),
 	}
@@ -289,6 +297,8 @@ func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapsh
 }
 
 func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id model.ID) error {
+	p.logger.Info("Deleting a snapshot from the database")
+
 	args := pgx.NamedArgs{
 		"id": int(id),
 	}

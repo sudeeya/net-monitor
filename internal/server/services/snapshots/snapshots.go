@@ -25,6 +25,7 @@ func NewSnapshots(logger *zap.Logger, repo repository.Repository) *snapshots {
 }
 
 func (s *snapshots) DeleteSnapshot(ctx context.Context, id model.ID) error {
+	s.logger.Info("Deleting a snapshot")
 	if err := s.repo.DeleteSnapshot(ctx, id); err != nil {
 		return err
 	}
@@ -33,6 +34,7 @@ func (s *snapshots) DeleteSnapshot(ctx context.Context, id model.ID) error {
 }
 
 func (s *snapshots) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
+	s.logger.Info("Getting a snapshot")
 	snapshot, err := s.repo.GetSnapshot(ctx, id)
 	if err != nil {
 		return model.Snapshot{}, err
@@ -42,6 +44,7 @@ func (s *snapshots) GetSnapshot(ctx context.Context, id model.ID) (model.Snapsho
 }
 
 func (s *snapshots) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
+	s.logger.Sugar().Infof("Getting the last %d timestamps", n)
 	timestamps, err := s.repo.GetNTimestamps(ctx, n)
 	if err != nil {
 		return nil, err
@@ -51,6 +54,7 @@ func (s *snapshots) GetNTimestamps(ctx context.Context, n int) (map[model.ID]tim
 }
 
 func (s *snapshots) SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error {
+	s.logger.Info("Saving a snapshot")
 	if err := s.repo.StoreSnapshot(ctx, snapshot); err != nil {
 		return err
 	}
