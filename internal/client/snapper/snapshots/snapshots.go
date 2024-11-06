@@ -2,7 +2,6 @@ package snapshots
 
 import (
 	"encoding/json"
-	"errors"
 	"net"
 	"net/netip"
 	"os"
@@ -24,10 +23,7 @@ type snapshots struct {
 }
 
 type target struct {
-	hostname  string
-	vendor    string
-	os        string
-	driver    *generic.Driver
+	cfg       targetConfig
 	templates []template
 }
 
@@ -39,11 +35,13 @@ type targetConfig struct {
 }
 
 func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
+	logger.Sugar().Infof("Extracting configs from file %s", targetsFile)
 	cfgs, err := extractConfigs(targetsFile)
 	if err != nil {
 		return nil, err
 	}
 
+	logger.Info("Forming a list of target devices")
 	targets, err := formTargets(cfgs)
 	if err != nil {
 		return nil, err
@@ -59,30 +57,46 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 	timestamp := time.Now()
 	devices := make([]model.Device, 0)
 
-	connErrs := error(nil)
-
 	for _, t := range s.targets {
-		err := t.driver.Open()
+		driver, err := generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
 		if err != nil {
-			connErrs = errors.Join(connErrs, err)
+			return nil, err
+		}
+
+		s.logger.Sugar().Infof("Trying to connect to %s", t.cfg.Hostname)
+		if err := driver.Open(); err != nil {
+			s.logger.Sugar().Errorf("Failed to connect to %s: %s", t.cfg.Hostname, err.Error())
 			continue
 		}
-		defer t.driver.Close()
+		defer driver.Close()
+		s.logger.Sugar().Infof("Connection to %s established", t.cfg.Hostname)
+
+		vendor, err := getVendor(t.cfg.OS)
+		if err != nil {
+			return nil, err
+		}
 
 		device := model.Device{
-			Hostname: t.hostname,
-			Vendor:   t.vendor,
-			OSName:   t.os,
+			Hostname: t.cfg.Hostname,
+			Vendor:   vendor,
+			OSName:   t.cfg.OS,
 		}
 
 		ifaces := make([]model.Interface, 0)
 
 		for _, template := range t.templates {
-			response, err := t.driver.SendCommand(template.cmd)
+			s.logger.Sugar().Infof("Sending command: %s", template.cmd)
+			response, err := driver.SendCommand(template.cmd)
 			if err != nil {
 				return nil, err
 			}
 
+			s.logger.Info("Parsing response")
 			parsed, err := response.TextFsmParse(template.file)
 			if err != nil {
 				return nil, err
@@ -158,7 +172,7 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 	return &model.Snapshot{
 		Timestamp: timestamp,
 		Devices:   devices,
-	}, connErrs
+	}, nil
 }
 
 func extractConfigs(targetFile string) ([]targetConfig, error) {
@@ -181,31 +195,13 @@ func formTargets(cfgs []targetConfig) ([]target, error) {
 	targets := make([]target, len(cfgs))
 
 	for cfgIdx, cfg := range cfgs {
-		driver, err := generic.NewDriver(
-			cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthUsername(cfg.Username),
-			options.WithAuthPassword(cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		vendor, err := getVendor(cfg.OS)
-		if err != nil {
-			return nil, err
-		}
-
 		templates, err := getTemplates(cfg.OS)
 		if err != nil {
 			return nil, err
 		}
 
 		targets[cfgIdx] = target{
-			hostname:  cfg.Hostname,
-			vendor:    vendor,
-			os:        cfg.OS,
-			driver:    driver,
+			cfg:       cfg,
 			templates: templates,
 		}
 	}

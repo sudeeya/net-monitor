@@ -35,10 +35,12 @@ func (c *Client) UploadSnapshot() error {
 	ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 	defer cancel()
 
+	c.logger.Info("Snapshot is being created")
 	s, err := c.snapper.Snap()
 	if err != nil {
 		return err
 	}
+	c.logger.Info("Snapshot is ready to be saved")
 
 	snapshot := converter.ToProtoFromSnapshot(s)
 
@@ -49,6 +51,7 @@ func (c *Client) UploadSnapshot() error {
 	if response.Error != "" {
 		return fmt.Errorf(response.Error)
 	}
+	c.logger.Info("Snapshot has been saved")
 
 	return nil
 }

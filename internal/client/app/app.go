@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/sudeeya/net-monitor/internal/client/client"
 	"github.com/sudeeya/net-monitor/internal/client/config"
@@ -32,19 +33,26 @@ func NewApp(
 }
 
 func (a *app) Run() {
+	a.logger.Info("Client is running")
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
+	uploadTicker := time.NewTicker(a.cfg.SnapInterval)
+
 	go func() {
-		for {
+		for range uploadTicker.C {
+			a.logger.Info("Client is getting ready to upload a snapshot")
 			err := a.client.UploadSnapshot()
 			if err != nil {
 				a.logger.Error(err.Error())
 			}
+			a.logger.Info("Client uploaded a snapshot")
 		}
 	}()
 
 	<-sigCh
+	a.logger.Info("Client is shutting down")
 	a.Shutdown()
 }
 
