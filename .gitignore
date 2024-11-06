@@ -35,3 +35,6 @@ server.env
 # Containerlab lab directories and backup files
 clab/*/clab*
 *.clab.yml.bak
+
+# Build directory
+build

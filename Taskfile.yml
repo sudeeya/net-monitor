@@ -3,10 +3,34 @@ version: '3'
 tasks:
   deploy-srlinux:
     desc: Deploy the srlinux lab.
+    dir: clab/srlinux
     cmds:
-      - cd clab/srlinux && sudo containerlab deploy -t srl.clab.yml
+      - sudo containerlab deploy -t srl.clab.yml
 
   destroy-srlinux:
     desc: Destroy the srlinux lab.
+    dir: clab/srlinux
     cmds:
-      - cd clab/srlinux && sudo containerlab destroy -t srl.clab.yml --cleanup
+      - sudo containerlab destroy -t srl.clab.yml --cleanup
+
+  run-client:
+    desc: Run the client.
+    cmds:
+      - go run cmd/client/main.go
+
+  run-server:
+    desc: Run the server.
+    cmds:
+      - go run cmd/server/main.go
+
+  build-client:
+    desc: Build the client executable.
+    cmds:
+      - mkdir -p build
+      - go build -o build/client cmd/client/main.go
+
+  build-server:
+    desc: Build the server executable.
+    cmds:
+      - mkdir -p build
+      - go build -o build/server cmd/server/main.go
