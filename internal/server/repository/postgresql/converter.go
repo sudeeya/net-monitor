@@ -13,40 +13,40 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	currentID := 0
 	for _, part := range parts {
 		switch {
-		case part.deviceID != currentID:
-			currentID = part.deviceID
+		case part.DeviceID != currentID:
+			currentID = part.DeviceID
 			ifaces := []model.Interface{
 				{
-					Name:      part.interfaceName,
-					MAC:       part.mac,
-					IP:        part.ip,
-					MTU:       part.mtu,
-					Bandwidth: part.bandwidth,
+					Name:      part.InterfaceName,
+					MAC:       part.MAC,
+					IP:        part.IP,
+					MTU:       part.MTU,
+					Bandwidth: part.Bandwidth,
 				},
 			}
 			devices = append(devices, model.Device{
-				Hostname:     part.hostname,
-				Vendor:       part.vendorName,
-				OSName:       part.osName,
-				OSVersion:    part.osVersion,
-				Serial:       part.serialNumber,
-				ManagementIP: part.managementIP,
+				Hostname:     part.Hostname,
+				Vendor:       part.VendorName,
+				OSName:       part.OSName,
+				OSVersion:    part.OSVersion,
+				Serial:       part.SerialNumber,
+				ManagementIP: part.ManagementIP,
 				Interfaces:   ifaces,
 			})
 		default:
 			iface := model.Interface{
-				Name:      part.interfaceName,
-				MAC:       part.mac,
-				IP:        part.ip,
-				MTU:       part.mtu,
-				Bandwidth: part.bandwidth,
+				Name:      part.InterfaceName,
+				MAC:       part.MAC,
+				IP:        part.IP,
+				MTU:       part.MTU,
+				Bandwidth: part.Bandwidth,
 			}
 			devices[len(devices)-1].Interfaces = append(devices[len(devices)-1].Interfaces, iface)
 		}
 	}
 
 	return model.Snapshot{
-		Timestamp: parts[0].timestamp,
+		Timestamp: parts[0].Timestamp,
 		Devices:   devices,
 	}
 }

@@ -7,22 +7,22 @@ import (
 )
 
 type dbTimestamp struct {
-	id        int       `db:"id"`
-	timestamp time.Time `db:"timestamp"`
+	ID        int       `db:"id"`
+	Timestamp time.Time `db:"timestamp"`
 }
 
 type dbSnapshotPart struct {
-	timestamp     time.Time        `db:"timestamp"`
-	vendorName    string           `db:"vendor_name"`
-	deviceID      int              `db:"device_id"`
-	hostname      string           `db:"hostname"`
-	osName        string           `db:"os_name"`
-	osVersion     string           `db:"os_version"`
-	serialNumber  string           `db:"serial_number"`
-	managementIP  netip.Prefix     `db:"management_ip"`
-	interfaceName string           `db:"interface_name"`
-	mac           net.HardwareAddr `db:"mac"`
-	ip            netip.Prefix     `db:"ip"`
-	mtu           int64            `db:"mtu"`
-	bandwidth     int64            `db:"bandwidth"`
+	Timestamp     time.Time        `db:"timestamp"`
+	VendorName    string           `db:"vendor_name"`
+	DeviceID      int              `db:"device_id"`
+	Hostname      string           `db:"hostname"`
+	OSName        string           `db:"os_name"`
+	OSVersion     string           `db:"os_version"`
+	SerialNumber  string           `db:"serial_number"`
+	ManagementIP  netip.Prefix     `db:"management_ip"`
+	InterfaceName string           `db:"interface_name"`
+	MAC           net.HardwareAddr `db:"mac"`
+	IP            netip.Prefix     `db:"ip"`
+	MTU           int64            `db:"mtu"`
+	Bandwidth     int64            `db:"bandwidth"`
 }

@@ -36,7 +36,7 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 
 		var response strings.Builder
 		for id, timestamp := range timestamps {
-			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v", id, timestamp))); err != nil {
+			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", id, timestamp))); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

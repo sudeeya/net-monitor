@@ -270,7 +270,7 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]ti
 
 	timestamps := make(map[model.ID]time.Time, len(dbTimestamps))
 	for _, dbt := range dbTimestamps {
-		timestamps[model.ID(dbt.id)] = dbt.timestamp
+		timestamps[model.ID(dbt.ID)] = dbt.Timestamp
 	}
 
 	return timestamps, nil
