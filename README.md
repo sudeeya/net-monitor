@@ -28,7 +28,7 @@ The server receives data and sends it to the PostgreSQL database for storage.  T
 To configure the client and server, `.env` files are used. Check `env` directory for more details.
 
 ## Demo
-You need [task](https://taskfile.dev/), [docker](https://www.docker.com/), and [containerlab](https://containerlab.dev/) to try the demo labs. To see all tasks use command:
+You need [task](https://taskfile.dev/), [docker](https://www.docker.com/), and [containerlab](https://containerlab.dev/) to try the demo labs. To see all tasks, use command:
 ```
 task --list
 ```
