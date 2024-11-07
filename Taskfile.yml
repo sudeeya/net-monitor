@@ -1,5 +1,8 @@
 version: '3'
 
+vars:
+  DATE: '{{now | date "2006-01-02"}}'
+
 tasks:
   deploy-srlinux:
     desc: Deploy the srlinux lab.
@@ -24,13 +27,27 @@ tasks:
       - go run cmd/server/main.go
 
   build-client:
-    desc: Build the client executable.
+    desc: |
+      Build the client executable.
+      Command format: task build-client -- [version].
+    dir: cmd/client
     cmds:
-      - mkdir -p build
-      - go build -o build/client cmd/client/main.go
+      - |
+        {{if .CLI_ARGS}}
+          go build -ldflags "-X main.buildVersion={{.CLI_ARGS}} -X main.buildDate={{.DATE}}" -o client main.go
+        {{else}}
+          go build -ldflags "-X main.buildDate={{.DATE}}" -o client main.go
+        {{end}}
 
   build-server:
-    desc: Build the server executable.
+    desc: |
+      Build the server executable.
+      Command format: task build-server -- [version].
+    dir: cmd/server
     cmds:
-      - mkdir -p build
-      - go build -o build/server cmd/server/main.go
+      - |
+        {{if .CLI_ARGS}}
+          go build -ldflags "-X main.buildVersion={{.CLI_ARGS}} -X main.buildDate={{.DATE}}" -o server main.go
+        {{else}}
+          go build -ldflags "-X main.buildDate={{.DATE}}" -o server main.go
+        {{end}}

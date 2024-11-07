@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -15,7 +16,17 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+)
+
 func main() {
+	_, err := fmt.Printf("Build version: %s\nBuild date: %s\n", buildVersion, buildDate)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	envFile := flag.String("e", "env/client.env", "Path to the file storing environment variables")
 
 	flag.Parse()
