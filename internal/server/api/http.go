@@ -7,18 +7,21 @@ import (
 	"go.uber.org/zap"
 )
 
+// Endpoints.
 const (
 	getNTimestampsEndpoint = "/timestamps/{timestampsCount}"
 	getSnapshotEndpoint    = "/snapshot/{snapshotID}"
 	deleteSnapshotEndpoint = "/delete/{snapshotID}"
 )
 
+// snapshotsHTTPServer defines object to interact with the server using HTTP.
 type snapshotsHTTPServer struct {
 	*chi.Mux
 	logger  *zap.Logger
 	service services.SnapshotsService
 }
 
+// NewSnapshotsHTTPServer returns snapshotsHTTPServer object.
 func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsService) *snapshotsHTTPServer {
 	mux := chi.NewRouter()
 
@@ -31,6 +34,7 @@ func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsServic
 	}
 }
 
+// registerEndpoints registers enpoints for HTTP requests.
 func registerEndpoints(mux *chi.Mux, logger *zap.Logger, service services.SnapshotsService) {
 	mux.Get(getNTimestampsEndpoint, handlers.GetNTimestampsHandler(logger, service))
 	mux.Get(getSnapshotEndpoint, handlers.GetSnapshotHandler(logger, service))

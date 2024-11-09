@@ -1,3 +1,4 @@
+// Package postgresql defines object that stores snapshots in PostgeSQL database.
 package postgresql
 
 import (
@@ -13,6 +14,7 @@ import (
 
 const limitInSeconds = 5
 
+// SQL queries to create tables needed to store snapshots.
 const (
 	createTableSnapshotsQuery = `
 CREATE TABLE IF NOT EXISTS snapshots (
@@ -54,6 +56,7 @@ CREATE TABLE IF NOT EXISTS interfaces (
 `
 )
 
+// SQL queries for inserting a snapshot.
 const (
 	insertSnapshotQuery = `
 INSERT INTO snapshots (timestamp)
@@ -94,6 +97,7 @@ FROM device_id d;
 `
 )
 
+// SQL querie to get snapshot ids and timestamps.
 const (
 	selectTimestampsQuery = `
 SELECT id, timestamp
@@ -103,6 +107,7 @@ LIMIT @limit;
 `
 )
 
+// SQL querie to get a snapshot.
 const (
 	selectSnapshotQuery = `
 SELECT
@@ -130,6 +135,7 @@ ORDER BY device_id ASC;
 `
 )
 
+// SQL querie to delete a snapshot.
 const (
 	deleteSnapshotQuery = `
 DELETE FROM snapshots
@@ -139,11 +145,14 @@ WHERE id = @id;
 
 var _ repository.Repository = (*postgreSQL)(nil)
 
+// postgreSQL implements the [Repository] interface.
 type postgreSQL struct {
 	logger *zap.Logger
 	db     *pgxpool.Pool
 }
 
+// NewPostgreSQL returns postgreSQL object to interact with PostgreSQL database.
+// The function establishes and tests the connection to the database and creates the necessary tables.
 func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 	defer cancel()
@@ -186,6 +195,7 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	}, nil
 }
 
+// StoreSnapshot implements the [Repository] interface.
 func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot) error {
 	p.logger.Info("Storing a snapshot to the database")
 
@@ -251,6 +261,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 	return tx.Commit(ctx)
 }
 
+// GetNTimestamps implements the [Repository] interface.
 func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
 	p.logger.Sugar().Infof("Getting the last %d timestamps from the database", n)
 
@@ -276,6 +287,7 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]ti
 	return timestamps, nil
 }
 
+// GetSnapshot implements the [Repository] interface.
 func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
 	p.logger.Info("Getting a snapshot from the database")
 
@@ -296,6 +308,7 @@ func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapsh
 	return toSnapshotFromDB(dbSnapshotParts), nil
 }
 
+// DeleteSnapshot implements the [Repository] interface.
 func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id model.ID) error {
 	p.logger.Info("Deleting a snapshot from the database")
 

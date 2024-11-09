@@ -1,3 +1,4 @@
+// Package app defines server application object.
 package app
 
 import (
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// app describes server application and all necessary layers.
 type app struct {
 	cfg        *config.Config
 	logger     *zap.Logger
@@ -25,6 +27,7 @@ type app struct {
 	grpcServer *grpc.Server
 }
 
+// NewApp returns app object to interact with server.
 func NewApp(
 	cfg *config.Config,
 	logger *zap.Logger,
@@ -41,6 +44,8 @@ func NewApp(
 	}
 }
 
+// Run starts the server.
+// It initiates listening for HTTP and gRPC requests and monitors for OS signals.
 func (a *app) Run() {
 	a.logger.Info("Server is running")
 
@@ -71,6 +76,8 @@ func (a *app) Run() {
 	a.Shutdown()
 }
 
+// Shutdown shuts down the server.
+// It syncs server logger before shutdown.
 func (a *app) Shutdown() {
 	var pathErr fs.PathError
 	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {

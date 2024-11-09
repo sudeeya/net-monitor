@@ -4,6 +4,7 @@ import (
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 )
 
+// toSnapshotFromDB creates a snapshot from a slice of database responses.
 func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	if len(parts) == 0 {
 		return model.Snapshot{}

@@ -9,12 +9,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// snapshotsGRPCServer defines object to interact with the server using gRPC.
 type snapshotsGRPCServer struct {
 	pb.UnimplementedSnapshotsServer
 	logger  *zap.Logger
 	service services.SnapshotsService
 }
 
+// NewSnapshotsGRPCServer returns snapshotsGRPCServer object.
 func NewSnapshotsGRPCServer(logger *zap.Logger, service services.SnapshotsService) *snapshotsGRPCServer {
 	return &snapshotsGRPCServer{
 		logger:  logger,
@@ -22,6 +24,7 @@ func NewSnapshotsGRPCServer(logger *zap.Logger, service services.SnapshotsServic
 	}
 }
 
+// SaveSnapshot requsts the service to save the object.
 func (s *snapshotsGRPCServer) SaveSnapshot(ctx context.Context, request *pb.SaveSnapshotRequest) (*pb.SaveSnapshotResponse, error) {
 	var response pb.SaveSnapshotResponse
 

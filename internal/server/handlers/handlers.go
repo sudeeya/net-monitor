@@ -1,3 +1,4 @@
+// Package handlers provides a collection of HTTP handlers.
 package handlers
 
 import (
@@ -17,6 +18,9 @@ import (
 
 const limitInSeconds = 5
 
+// GetNTimestampsHandler returns an http.HandlerFunc that requests a list of
+// snapshot ids and timestamps from the service and writes them to the response.
+// If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
@@ -24,12 +28,14 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 
 		n, err := strconv.Atoi(chi.URLParam(r, "timestampsCount"))
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		timestamps, err := service.GetNTimestamps(ctx, n)
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -37,6 +43,7 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 		var response strings.Builder
 		for id, timestamp := range timestamps {
 			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", id, timestamp))); err != nil {
+				logger.Error(err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -50,6 +57,9 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 	}
 }
 
+// GetSnapshotHandler returns an http.HandlerFunc that requests a snapshot
+// from the service and writes it to the response in json format.
+// If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
@@ -57,18 +67,21 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 
 		id, err := strconv.Atoi(chi.URLParam(r, "snapshotID"))
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		snapshot, err := service.GetSnapshot(ctx, model.ID(id))
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		response, err := json.MarshalIndent(snapshot, "", "\t")
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -81,6 +94,8 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 	}
 }
 
+// DeleteSnapshotHandler returns an http.HandlerFunc that requests the service to delete a snapshot.
+// If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func DeleteSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
@@ -88,11 +103,13 @@ func DeleteSnapshotHandler(logger *zap.Logger, service services.SnapshotsService
 
 		id, err := strconv.Atoi(chi.URLParam(r, "snapshotID"))
 		if err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if err := service.DeleteSnapshot(ctx, model.ID(id)); err != nil {
+			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
