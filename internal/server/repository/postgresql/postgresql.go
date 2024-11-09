@@ -97,7 +97,7 @@ FROM device_id d;
 `
 )
 
-// SQL querie to get snapshot ids and timestamps.
+// SQL query to get snapshot ids and timestamps.
 const (
 	selectTimestampsQuery = `
 SELECT id, timestamp
@@ -107,7 +107,7 @@ LIMIT @limit;
 `
 )
 
-// SQL querie to get a snapshot.
+// SQL query to get a snapshot.
 const (
 	selectSnapshotQuery = `
 SELECT
@@ -135,7 +135,7 @@ ORDER BY device_id ASC;
 `
 )
 
-// SQL querie to delete a snapshot.
+// SQL query to delete a snapshot.
 const (
 	deleteSnapshotQuery = `
 DELETE FROM snapshots
