@@ -1,3 +1,4 @@
+// Package snapper defines object that creates snapshots.
 package snapper
 
 import (

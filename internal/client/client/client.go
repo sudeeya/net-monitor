@@ -1,3 +1,4 @@
+// Package client defines object that interacts with [Snapper] and communicates with the server.
 package client
 
 import (
@@ -13,12 +14,14 @@ import (
 
 const limitInSeconds = 100
 
+// Client describes client.
 type Client struct {
 	logger  *zap.Logger
 	snapper snapper.Snapper
 	client  pb.SnapshotsClient
 }
 
+// NewClient returns client object.
 func NewClient(
 	logger *zap.Logger,
 	snapper snapper.Snapper,
@@ -31,6 +34,7 @@ func NewClient(
 	}
 }
 
+// UploadSnapshot requests the [Snapper] to make snapshot and sends it to the server.
 func (c *Client) UploadSnapshot() error {
 	ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 	defer cancel()

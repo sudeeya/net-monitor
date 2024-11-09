@@ -1,3 +1,4 @@
+// Package config defines client config.
 package config
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/caarlos0/env"
 )
 
+// Config describes client config.
 type Config struct {
 	ServerAddr   string        `env:"SERVER_ADDR" envDefault:"localhost:9090"`
 	TargetsFile  string        `env:"TARGETS_FILE,required"`
@@ -14,6 +16,8 @@ type Config struct {
 	LogFile      string        `env:"LOG_FILE"`
 }
 
+// NewConfig returns client config.
+// The function parses environment variables to form config.
 func NewConfig() (*Config, error) {
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {

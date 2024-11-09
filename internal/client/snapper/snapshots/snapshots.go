@@ -1,3 +1,4 @@
+// Package snapshots defines object that creates snapshots by connecting to network devices via SSH.
 package snapshots
 
 import (
@@ -17,16 +18,19 @@ import (
 
 var _ snapper.Snapper = (*snapshots)(nil)
 
+// snapshots implements the [Snapper] interface.
 type snapshots struct {
 	logger  *zap.Logger
 	targets []target
 }
 
+// target defines a target device.
 type target struct {
 	cfg       targetConfig
 	templates []template
 }
 
+// targetConfig defines device OS and information needed for an SSH connection.
 type targetConfig struct {
 	OS       string `json:"os"`
 	Hostname string `json:"hostname"`
@@ -34,6 +38,8 @@ type targetConfig struct {
 	Password string `json:"password"`
 }
 
+// NewSnapshots returns snapshots object.
+// The function extracts target network devices from  a json file.
 func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
 	logger.Sugar().Infof("Extracting configs from file %s", targetsFile)
 	cfgs, err := extractConfigs(targetsFile)
@@ -53,6 +59,7 @@ func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
 	}, nil
 }
 
+// Snap implements the [Snapper] interface.
 func (s *snapshots) Snap() (*model.Snapshot, error) {
 	timestamp := time.Now()
 	devices := make([]model.Device, 0)

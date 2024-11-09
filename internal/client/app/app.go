@@ -1,3 +1,4 @@
+// Package app defines client application object.
 package app
 
 import (
@@ -14,12 +15,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// app describes client application and all necessary layers.
 type app struct {
 	cfg    *config.Config
 	logger *zap.Logger
 	client *client.Client
 }
 
+// NewApp returns app object to interact with client.
 func NewApp(
 	cfg *config.Config,
 	logger *zap.Logger,
@@ -32,6 +35,8 @@ func NewApp(
 	}
 }
 
+// Run starts the client.
+// It initiates periodic sending of gRPC requests to server and monitors for OS signals.
 func (a *app) Run() {
 	a.logger.Info("Client is running")
 
@@ -56,6 +61,8 @@ func (a *app) Run() {
 	a.Shutdown()
 }
 
+// Shutdown shuts down the client.
+// It syncs client logger before shutdown.
 func (a *app) Shutdown() {
 	var pathErr fs.PathError
 	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {
