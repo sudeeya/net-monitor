@@ -1,3 +1,4 @@
+// Package logging provides a way to create logger.
 package logging
 
 import (
@@ -7,12 +8,16 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// Possible log levels.
 const (
 	Info  = "INFO"
 	Error = "ERROR"
 	Fatal = "FATAL"
 )
 
+// NewLogger returns a logger.
+// The function sets the log level and adds a file for writing logs.
+// If [logFile] is an empty string, logs will be output to standard out only.
 func NewLogger(logLevel, logFile string) (*zap.Logger, error) {
 	cfg := zap.NewDevelopmentConfig()
 

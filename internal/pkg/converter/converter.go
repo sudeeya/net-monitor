@@ -1,3 +1,4 @@
+// Package converter provides functions to convert protobuf data to model data and vice versa.
 package converter
 
 import (
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// ToProtoFromSnapshot converts model representation of snapshot to protobuf.
 func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
 	devices := make([]*pb.Snapshot_Device, len(snapshot.Devices))
 
@@ -23,6 +25,7 @@ func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
 	}
 }
 
+// ToProtoFromDevice converts model representation of device to protobuf.
 func ToProtoFromDevice(device model.Device) *pb.Snapshot_Device {
 	ifaces := make([]*pb.Snapshot_Device_Interface, len(device.Interfaces))
 
@@ -41,6 +44,7 @@ func ToProtoFromDevice(device model.Device) *pb.Snapshot_Device {
 	}
 }
 
+// ToProtoFromInterface converts model representation of interface to protobuf.
 func ToProtoFromInterface(iface model.Interface) *pb.Snapshot_Device_Interface {
 	return &pb.Snapshot_Device_Interface{
 		Name:      iface.Name,
@@ -51,6 +55,7 @@ func ToProtoFromInterface(iface model.Interface) *pb.Snapshot_Device_Interface {
 	}
 }
 
+// ToDeviceFromProto converts protobuf representation of snapshot to model.
 func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 	devices := make([]model.Device, len(snapshot.Devices))
 
@@ -69,6 +74,7 @@ func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 	}, nil
 }
 
+// ToDeviceFromProto converts protobuf representation of device to model.
 func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 	ifaces := make([]model.Interface, len(device.Interfaces))
 
@@ -101,6 +107,7 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 	}, nil
 }
 
+// ToInterfaceFromProto converts protobuf representation of interface to model.
 func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface, error) {
 	var mac net.HardwareAddr
 	if iface.Mac != "" {
