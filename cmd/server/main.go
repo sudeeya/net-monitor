@@ -7,13 +7,11 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sudeeya/net-monitor/internal/pkg/logging"
-	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"github.com/sudeeya/net-monitor/internal/server/api"
 	"github.com/sudeeya/net-monitor/internal/server/app"
 	"github.com/sudeeya/net-monitor/internal/server/config"
 	"github.com/sudeeya/net-monitor/internal/server/repository/postgresql"
 	"github.com/sudeeya/net-monitor/internal/server/services/snapshots"
-	"google.golang.org/grpc"
 )
 
 var (
@@ -52,9 +50,7 @@ func main() {
 
 	service := snapshots.NewSnapshots(logger, repo)
 
-	grpcServer := grpc.NewServer()
-	snapshotsGRPCServer := api.NewSnapshotsGRPCServer(logger, service)
-	pb.RegisterSnapshotsServer(grpcServer, snapshotsGRPCServer)
+	grpcServer := api.NewSnapshotsGRPCServer(logger, service)
 
 	httpServer := api.NewSnapshotsHTTPServer(logger, service)
 
