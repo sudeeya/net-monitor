@@ -10,6 +10,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var errorStringPrefixNoSlash = "no '/'"
+
 // ToProtoFromSnapshot converts model representation of snapshot to protobuf.
 func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
 	devices := make([]*pb.Snapshot_Device, len(snapshot.Devices))
@@ -77,13 +79,11 @@ func ToSnapshotFromProto(snapshot *pb.Snapshot) (*model.Snapshot, error) {
 func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 	ifaces := make([]model.Interface, len(device.Interfaces))
 
-	var managementIP netip.Prefix
-	if device.ManagementIp != "invalid Prefix" {
-		ip, err := netip.ParsePrefix(device.ManagementIp)
-		if err != nil {
+	managementIP, err := netip.ParsePrefix(device.ManagementIp)
+	if err != nil {
+		if err.Error() != errorStringPrefixNoSlash {
 			return nil, err
 		}
-		managementIP = ip
 	}
 
 	for ifaceIdx, iface := range device.Interfaces {
@@ -119,7 +119,9 @@ func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface
 
 	ip, err := netip.ParsePrefix(iface.Ip)
 	if err != nil {
-		return nil, err
+		if err.Error() != errorStringPrefixNoSlash {
+			return nil, err
+		}
 	}
 
 	return &model.Interface{
