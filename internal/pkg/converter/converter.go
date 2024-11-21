@@ -2,7 +2,6 @@
 package converter
 
 import (
-	"fmt"
 	"net"
 	"net/netip"
 
@@ -120,7 +119,6 @@ func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface
 
 	ip, err := netip.ParsePrefix(iface.Ip)
 	if err != nil {
-		fmt.Println("gugu")
 		return nil, err
 	}
 
