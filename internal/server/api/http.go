@@ -2,9 +2,10 @@ package api
 
 import (
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+
 	"github.com/sudeeya/net-monitor/internal/server/handlers"
 	"github.com/sudeeya/net-monitor/internal/server/services"
-	"go.uber.org/zap"
 )
 
 // Endpoints.

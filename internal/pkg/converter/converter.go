@@ -5,9 +5,10 @@ import (
 	"net"
 	"net/netip"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var errorStringPrefixNoSlash = "no '/'"

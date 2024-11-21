@@ -5,10 +5,11 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/repository"
 	"github.com/sudeeya/net-monitor/internal/server/services"
-	"go.uber.org/zap"
 )
 
 var _ services.SnapshotsService = (*snapshots)(nil)

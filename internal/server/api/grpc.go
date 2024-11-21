@@ -3,11 +3,12 @@ package api
 import (
 	"context"
 
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+
 	"github.com/sudeeya/net-monitor/internal/pkg/converter"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"github.com/sudeeya/net-monitor/internal/server/services"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 // snapshotsImplementation defines object to interact with the server using gRPC.

@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/services"
-	"go.uber.org/zap"
 )
 
 const limitInSeconds = 5

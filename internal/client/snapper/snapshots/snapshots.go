@@ -11,9 +11,10 @@ import (
 
 	"github.com/scrapli/scrapligo/driver/generic"
 	"github.com/scrapli/scrapligo/driver/options"
+	"go.uber.org/zap"
+
 	"github.com/sudeeya/net-monitor/internal/client/snapper"
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
-	"go.uber.org/zap"
 )
 
 var _ snapper.Snapper = (*snapshots)(nil)

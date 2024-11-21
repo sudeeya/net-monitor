@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sudeeya/net-monitor/internal/client/snapper"
-	"github.com/sudeeya/net-monitor/internal/pkg/converter"
-	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/sudeeya/net-monitor/internal/client/snapper"
+	"github.com/sudeeya/net-monitor/internal/pkg/converter"
+	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 )
 
 const limitInSeconds = 100

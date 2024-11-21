@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
+
 	"github.com/sudeeya/net-monitor/internal/pkg/logging"
 	"github.com/sudeeya/net-monitor/internal/server/api"
 	"github.com/sudeeya/net-monitor/internal/server/app"

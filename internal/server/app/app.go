@@ -13,9 +13,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"google.golang.org/grpc"
+
 	"github.com/sudeeya/net-monitor/internal/server/config"
 	"github.com/sudeeya/net-monitor/internal/server/repository"
-	"google.golang.org/grpc"
 )
 
 // app describes server application and all necessary layers.

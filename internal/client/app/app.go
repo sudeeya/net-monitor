@@ -10,9 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/sudeeya/net-monitor/internal/client/client"
 	"github.com/sudeeya/net-monitor/internal/client/config"
-	"go.uber.org/zap"
 )
 
 // app describes client application and all necessary layers.
