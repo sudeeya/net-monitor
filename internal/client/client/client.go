@@ -10,6 +10,8 @@ import (
 	"github.com/sudeeya/net-monitor/internal/pkg/converter"
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const limitInSeconds = 100
@@ -18,6 +20,7 @@ const limitInSeconds = 100
 type Client struct {
 	logger  *zap.Logger
 	snapper snapper.Snapper
+	conn    *grpc.ClientConn
 	client  pb.SnapshotsClient
 }
 
@@ -25,13 +28,24 @@ type Client struct {
 func NewClient(
 	logger *zap.Logger,
 	snapper snapper.Snapper,
-	client pb.SnapshotsClient,
-) *Client {
+	serverAddr string,
+) (*Client, error) {
+	conn, err := grpc.NewClient(
+		serverAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := pb.NewSnapshotsClient(conn)
+
 	return &Client{
 		logger:  logger,
 		snapper: snapper,
+		conn:    conn,
 		client:  client,
-	}
+	}, nil
 }
 
 // UploadSnapshot requests the [Snapper] to make snapshot and sends it to the server.
@@ -58,4 +72,9 @@ func (c *Client) UploadSnapshot() error {
 	c.logger.Info("Snapshot has been saved")
 
 	return nil
+}
+
+// Close tears down connections.
+func (c *Client) Close() error {
+	return c.conn.Close()
 }

@@ -11,9 +11,6 @@ import (
 	"github.com/sudeeya/net-monitor/internal/client/config"
 	"github.com/sudeeya/net-monitor/internal/client/snapper/snapshots"
 	"github.com/sudeeya/net-monitor/internal/pkg/logging"
-	"github.com/sudeeya/net-monitor/internal/pkg/pb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -50,18 +47,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conn, err := grpc.NewClient(
-		cfg.ServerAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	grpcClient, err := client.NewClient(logger, snapper, cfg.ServerAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-
-	snapshotsClient := pb.NewSnapshotsClient(conn)
-
-	grpcClient := client.NewClient(logger, snapper, snapshotsClient)
 
 	a := app.NewApp(cfg, logger, grpcClient)
 

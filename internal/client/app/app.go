@@ -64,9 +64,13 @@ func (a *app) Run() {
 // Shutdown shuts down the client.
 // It syncs client logger before shutdown.
 func (a *app) Shutdown() {
+	if err := a.client.Close(); err != nil {
+		log.Printf("Failed to close the client: %v/n", err)
+	}
+
 	var pathErr fs.PathError
 	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {
-		log.Fatalf("Failed to sync logger: %v\n", err)
+		log.Printf("Failed to sync logger: %v\n", err)
 	}
 
 	os.Exit(0)
