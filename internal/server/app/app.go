@@ -55,7 +55,7 @@ func (a *app) Run() {
 	go func() {
 		a.logger.Info("Listening for HTTP requests")
 		if err := http.ListenAndServe(a.cfg.HTTPAddr, a.handler); err != nil {
-			a.logger.Fatal(err.Error())
+			a.logger.Error(err.Error())
 		}
 	}()
 
@@ -67,7 +67,7 @@ func (a *app) Run() {
 
 		a.logger.Info("Listening for gRPC requests")
 		if err := a.grpcServer.Serve(listen); err != nil {
-			a.logger.Fatal(err.Error())
+			a.logger.Error(err.Error())
 		}
 	}()
 
@@ -81,7 +81,7 @@ func (a *app) Run() {
 func (a *app) Shutdown() {
 	var pathErr fs.PathError
 	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {
-		log.Fatalf("failed to sync logger: %v\n", err)
+		log.Fatalf("Failed to sync logger: %v\n", err)
 	}
 
 	os.Exit(0)

@@ -66,7 +66,7 @@ func (a *app) Run() {
 func (a *app) Shutdown() {
 	var pathErr fs.PathError
 	if err := a.logger.Sync(); err != nil && errors.Is(err, &pathErr) {
-		log.Fatalf("failed to sync logger: %v\n", err)
+		log.Fatalf("Failed to sync logger: %v\n", err)
 	}
 
 	os.Exit(0)
