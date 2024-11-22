@@ -9,7 +9,6 @@ on:
 jobs:
   static:
     runs-on: ubuntu-latest
-    container: golang:1.23
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,4 +17,3 @@ jobs:
         uses: dominikh/staticcheck-action@v1
         with:
           version: "latest"
-          install-go: false
