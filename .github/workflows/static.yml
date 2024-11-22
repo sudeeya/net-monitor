@@ -14,11 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install staticcheck
+      - name: Go vet
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go vet ./...
 
-      - name: Run static analysis
-        run: |
-          go build -buildvcs=false
-          staticcheck ./...
+      - name: Staticcheck
+        uses: dominikh/staticcheck-action@v1
+        with:
+          version: "latest"
