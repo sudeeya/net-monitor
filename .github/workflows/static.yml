@@ -20,4 +20,5 @@ jobs:
 
       - name: Run static analysis
         run: |
+          go build -buildvcs=false
           staticcheck ./...
