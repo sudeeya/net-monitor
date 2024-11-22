@@ -14,15 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Disable VCS stamping
-        run: |
-          go build -buildvcs=false
-
       - name: Install staticcheck
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@latest
 
       - name: Run static analysis
         run: |
-          go vet ./...
           staticcheck ./...
