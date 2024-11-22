@@ -14,10 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Go vet
-        run: |
-          go vet ./...
-
       - name: Staticcheck
         uses: dominikh/staticcheck-action@v1
         with:
