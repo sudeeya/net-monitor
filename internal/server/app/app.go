@@ -12,7 +12,6 @@ import (
 	"syscall"
 
 	"go.uber.org/zap"
-
 	"google.golang.org/grpc"
 
 	"github.com/sudeeya/net-monitor/internal/server/config"
