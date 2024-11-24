@@ -27,3 +27,11 @@ go.work.sum
 # IDEs directories
 .idea
 .vscode
+
+# Environment files
+client.env
+server.env
+
+# Containerlab lab directories and backup files
+clab/*/clab*
+*.clab.yml.bak
