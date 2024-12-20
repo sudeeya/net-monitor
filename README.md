@@ -1,6 +1,12 @@
 # NetMonitor
 NetMonitor is a client-server solution that polls devices on the network to obtain their configuration. It was made for educational purposes.
 
+## ERD
+
+The image below shows Entity Relationship Diagram for the database used in the project.
+
+![Entity Relationship Diagram](assets/images/erd.png)
+
 ## Usage
 The solution includes client and server. 
 
