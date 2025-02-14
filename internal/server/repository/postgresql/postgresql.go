@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS devices (
 	id SERIAL PRIMARY KEY,
 	vendor_id INT REFERENCES vendors(id) ON DELETE RESTRICT,
 	operating_system_id INT REFERENCES operating_systems(id) ON DELETE RESTRICT,
-	hostname TEXT,
+	hostname TEXT NOT NULL,
 	serial_number TEXT UNIQUE
 );
 `
@@ -55,8 +55,7 @@ CREATE TABLE IF NOT EXISTS device_states (
 	id SERIAL PRIMARY KEY,
 	snapshot_id INT REFERENCES snapshots(id) ON DELETE CASCADE,
 	device_id INT REFERENCES devices(id) ON DELETE RESTRICT,
-	snapshot_status TEXT NOT NULL CHECk (snapshot_status IN ('success', 'failure')),
-	management_ip INET
+	is_snapshot_successful BOOLEAN NOT NULL
 );
 `
 
@@ -64,7 +63,8 @@ CREATE TABLE IF NOT EXISTS device_states (
 CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
-	mac MACADDR
+	name TEXT NOT NULL,
+	mac MACADDR NOT NULL 
 );
 `
 
@@ -73,10 +73,28 @@ CREATE TABLE IF NOT EXISTS interface_states (
 	id SERIAL PRIMARY KEY,
 	interface_id INT REFERENCES interfaces(id) ON DELETE CASCADE,
 	device_state_id INT REFERENCES device_states(id) ON DELETE CASCADE,
-	name TEXT,
+	is_up BOOLEAN NOT NULL,
 	ip INET,
-	mtu INT,
-	bandwidth INT
+	mtu INT
+);
+`
+
+	createTableSubinterfacesQuery = `
+CREATE TABLE IF NOT EXISTS subinterfaces (
+	id SERIAL PRIMARY KEY,
+	interface_id INT REFERENCES interfaces(id) ON DELETE CASCADE,
+	name TEXT NOT NULL
+);
+`
+
+	createTableSubinterfaceStatesQuery = `
+CREATE TABLE IF NOT EXISTS subinterface_states (
+	id SERIAL PRIMARY KEY,
+	subinterface_id INT REFERENCES subinterfaces(id) ON DELETE CASCADE,
+	interface_state_id INT REFERENCES interface_states(id) ON DELETE CASCADE,
+	is_up BOOLEAN NOT NULL,
+	ip INET,
+	mtu INT
 );
 `
 )
@@ -202,6 +220,8 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 		createTableDeviceStatesQuery,
 		createTableInterfacesQuery,
 		createTableInterfaceStatesQuery,
+		createTableSubinterfacesQuery,
+		createTableSubinterfaceStatesQuery,
 	}
 
 	for _, query := range createTableQueries {
