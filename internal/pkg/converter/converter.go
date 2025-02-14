@@ -2,6 +2,7 @@
 package converter
 
 import (
+	"errors"
 	"net"
 	"net/netip"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/sudeeya/net-monitor/internal/pkg/pb"
 )
 
-var errorStringPrefixNoSlash = "no '/'"
+var errorPrefixNoSlash = errors.New("no '/'")
 
 // ToProtoFromSnapshot converts model representation of snapshot to protobuf.
 func ToProtoFromSnapshot(snapshot *model.Snapshot) *pb.Snapshot {
@@ -82,7 +83,7 @@ func ToDeviceFromProto(device *pb.Snapshot_Device) (*model.Device, error) {
 
 	managementIP, err := netip.ParsePrefix(device.ManagementIp)
 	if err != nil {
-		if err.Error() != errorStringPrefixNoSlash {
+		if errors.Is(err, errorPrefixNoSlash) {
 			return nil, err
 		}
 	}
@@ -120,7 +121,7 @@ func ToInterfaceFromProto(iface *pb.Snapshot_Device_Interface) (*model.Interface
 
 	ip, err := netip.ParsePrefix(iface.Ip)
 	if err != nil {
-		if err.Error() != errorStringPrefixNoSlash {
+		if errors.Is(err, errorPrefixNoSlash) {
 			return nil, err
 		}
 	}
