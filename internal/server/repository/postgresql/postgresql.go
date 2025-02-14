@@ -20,26 +20,42 @@ const (
 	createTableSnapshotsQuery = `
 CREATE TABLE IF NOT EXISTS snapshots (
 	id SERIAL PRIMARY KEY,
-	timestamp TIMESTAMP UNIQUE NOT NULL
+	timestamp TIMESTAMPTZ UNIQUE NOT NULL
 );
 `
 
 	createTableVendorsQuery = `
 CREATE TABLE IF NOT EXISTS vendors (
 	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL
+	name TEXT UNIQUE NOT NULL
+);
+`
+
+	createTableOperatingSystemsQuery = `
+CREATE TABLE IF NOT EXISTS operating_systems (
+	id SERIAL PRIMARY KEY,
+	name TEXT NOT NULL,
+	version TEXT,
+	UNIQUE (name, version)
 );
 `
 
 	createTableDevicesQuery = `
 CREATE TABLE IF NOT EXISTS devices (
 	id SERIAL PRIMARY KEY,
-	snapshot_id INT REFERENCES snapshots(id) ON DELETE CASCADE,
 	vendor_id INT REFERENCES vendors(id) ON DELETE RESTRICT,
-	hostname varchar(255),
-	os_name VARCHAR(255),
-	os_version VARCHAR(255),
-	serial_number VARCHAR(255),
+	operating_system_id INT REFERENCES operating_systems(id) ON DELETE RESTRICT,
+	hostname TEXT,
+	serial_number TEXT UNIQUE
+);
+`
+
+	createTableDeviceStatesQuery = `
+CREATE TABLE IF NOT EXISTS device_states (
+	id SERIAL PRIMARY KEY,
+	snapshot_id INT REFERENCES snapshots(id) ON DELETE CASCADE,
+	device_id INT REFERENCES devices(id) ON DELETE RESTRICT,
+	snapshot_status TEXT NOT NULL CHECk (snapshot_status IN ('success', 'failure')),
 	management_ip INET
 );
 `
@@ -48,8 +64,16 @@ CREATE TABLE IF NOT EXISTS devices (
 CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
-	name VARCHAR(255),
-	mac MACADDR,
+	mac MACADDR
+);
+`
+
+	createTableInterfaceStatesQuery = `
+CREATE TABLE IF NOT EXISTS interface_states (
+	id SERIAL PRIMARY KEY,
+	interface_id INT REFERENCES interfaces(id) ON DELETE CASCADE,
+	device_state_id INT REFERENCES device_states(id) ON DELETE CASCADE,
+	name TEXT,
 	ip INET,
 	mtu INT,
 	bandwidth INT
@@ -173,8 +197,11 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	createTableQueries := []string{
 		createTableSnapshotsQuery,
 		createTableVendorsQuery,
+		createTableOperatingSystemsQuery,
 		createTableDevicesQuery,
+		createTableDeviceStatesQuery,
 		createTableInterfacesQuery,
+		createTableInterfaceStatesQuery,
 	}
 
 	for _, query := range createTableQueries {
