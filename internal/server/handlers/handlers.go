@@ -94,31 +94,3 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 		}
 	}
 }
-
-// DeleteSnapshotHandler returns an http.HandlerFunc that requests the service to delete a snapshot.
-// If an error occurs, it logs the error and returns an appropriate HTTP status code.
-func DeleteSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
-		defer cancel()
-
-		id, err := strconv.Atoi(chi.URLParam(r, "snapshotID"))
-		if err != nil {
-			logger.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if err := service.DeleteSnapshot(ctx, model.ID(id)); err != nil {
-			logger.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("Snapshot is deleted")); err != nil {
-			logger.Error(err.Error())
-		}
-	}
-}
