@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS devices (
 	id SERIAL PRIMARY KEY,
 	vendor_id INT REFERENCES vendors(id) ON DELETE RESTRICT,
 	operating_system_id INT REFERENCES operating_systems(id) ON DELETE RESTRICT,
-	hostname TEXT NOT NULL,
-	serial_number TEXT UNIQUE
+	hostname TEXT UNIQUE NOT NULL,
+	serial_number TEXT
 );
 `
 
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
 	name TEXT NOT NULL,
-	mac MACADDR NOT NULL 
+	mac MACADDR UNIQUE NOT NULL 
 );
 `
 
@@ -97,31 +97,120 @@ VALUES (@vendor)
 ON CONFLICT (name) DO NOTHING;
 `
 
+	insertOperatingSystemQuery = `
+INSERT INTO operating_systems (name, version)
+VALUES (@os, @version)
+ON CONFLICT (name, version) DO NOTHING;
+`
+
 	insertDeviceQuery = `
-WITH snapshot_id AS (
-	SELECT id
-	FROM snapshots
-	WHERE timestamp = @timestamp
-), vendor_id AS (
+WITH vendor_id AS (
 	SELECT id
 	FROM vendors 
 	WHERE name = @vendor
-)
-INSERT INTO devices (snapshot_id, vendor_id, hostname, os_name, os_version, serial_number, management_ip)
-SELECT s.id, v.id, @hostname, @os, @version, @serial, @ip
-FROM snapshot_id s, vendor_id v;
+), operating_system_id AS (
+	SELECT id
+	FROM operating_systems
+	WHERE name = @os AND version = @version
+) 
+INSERT INTO devices (vendor_id, operating_system_id, hostname, serial_number)
+SELECT v.id, o.id, @hostname, @serial
+FROM vendor_id AS v, operating_system_id AS o;
+`
+
+	insertDeviceStateQuery = `
+WITH snapshot_id AS (
+	SELECT id
+	FROM snapshots 
+	WHERE timestamp = @timestamp
+), device_id AS (
+	SELECT id
+	FROM devices
+	WHERE hostname = @hostname
+) 
+INSERT INTO device_states (snapshot_id, device_id, is_snapshot_successful)
+SELECT s.id, d.id, @is_snapshot_successful
+FROM snapshot_id AS s, device_id AS d;
 `
 
 	insertInterfaceQuery = `
 WITH device_id AS (
 	SELECT id
 	FROM devices 
-	ORDER BY id DESC
-	LIMIT 1
+	WHERE hostname = @hostname
 )
-INSERT INTO interfaces (device_id, name, mac, ip, mtu, bandwidth)
-SELECT d.id, @name, @mac, @ip, @mtu, @bandwidth
-FROM device_id d;
+INSERT INTO interfaces (device_id, name, mac)
+SELECT d.id, @name, @mac
+FROM device_id AS d;
+`
+
+	insertInterfaceStateQuery = `
+WITH interface_id AS (
+	SELECT id
+	FROM interfaces 
+	WHERE mac = @mac
+), device_state_id AS (
+	SELECT id
+	FROM device_states
+	WHERE snapshot_id IN (
+		SELECT id
+		FROM snapshots 
+		WHERE timestamp = @timestamp
+	) AND device_id IN (
+		SELECT id
+		FROM devices
+		WHERE hostname = @hostname
+	)
+) 
+INSERT INTO interface_states (interface_id, device_state_id, is_up, ip, mtu)
+SELECT i.id, d.id, @is_up, @ip, @mtu
+FROM interface_id AS i, device_state_id AS d;
+`
+
+	insertSubinterfaceQuery = `
+WITH interface_id AS (
+	SELECT id
+	FROM interfaces 
+	WHERE mac = @mac
+)
+INSERT INTO subinterfaces (interface_id, name)
+SELECT i.id, @name
+FROM interface_id AS i;
+`
+
+	insertSubinterfaceStateQuery = `
+WITH subinterface_id AS (
+	SELECT id
+	FROM subinterfaces 
+	WHERE interface_id IN (
+		SELECT id
+		FROM interfaces 
+		WHERE mac = @mac
+	)
+), interface_state_id AS (
+	SELECT id
+	FROM interface_states
+	WHERE interface_id IN (
+		SELECT id
+		FROM interfaces 
+		WHERE mac = @mac
+	) AND device_state_id IN (
+		SELECT id
+		FROM device_states
+		WHERE snapshot_id IN (
+			SELECT id
+			FROM snapshots 
+			WHERE timestamp = @timestamp
+		) AND device_id IN (
+			SELECT id
+			FROM devices
+			WHERE hostname = @hostname
+		)
+	)
+) 
+INSERT INTO subinterface_states (subinterface_id, interface_state_id, is_up, ip, mtu)
+SELECT s.id, i.id, @is_up, @ip, @mtu
+FROM subinterface_id AS s, interface_state_id AS i;
 `
 )
 
