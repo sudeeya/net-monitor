@@ -174,22 +174,31 @@ const (
 SELECT
 	s.timestamp,
 	v.name AS vendor_name,
+	o.name AS os_name,
+	o.version AS os_version,
 	d.id AS device_id,
 	d.hostname,
-	d.os_name,
-	d.os_version,
 	d.serial_number,
-	d.management_ip,
+	ds.is_snapshot_successful,
 	i.name AS interface_name,
 	i.mac,
-	i.ip,
-	i.mtu,
-	i.bandwidth
+	is.is_up AS interface_is_up,
+	is.ip AS interface_ip,
+	is.mtu AS interface_mtu,
+	si.name AS subinterface_name,
+	sis.is_up AS subinterface_is_up,
+	sis.ip AS subinterface_ip,
+	sis.mtu AS subinterface_mtu
 FROM
-	snapshots s
-	JOIN devices d ON s.id = d.snapshot_id
-	JOIN vendors v ON v.id = d.vendor_id
-	JOIN interfaces i ON d.id = i.device_id
+	devices AS d
+	JOIN vendors AS v ON v.id = d.vendor_id
+	JOIN operating_systems AS o ON o.id = d.operating_system_id
+	JOIN device_states AS ds ON d.id = ds.device_id
+	JOIN snapshots AS s ON s.id = ds.snapshot_id
+	JOIN interfaces AS i ON d.id = i.device_id
+	JOIN interface_states AS is ON i.id = is.interface_id AND ds.id = is.device_state_id
+	LEFT JOIN subinterfaces AS si ON i.id = si.interface_id
+	LEFT JOIN subinterface_states AS sis ON si.id = sis.subinterface_id AND is.id = sis.interface_state_id
 WHERE
 	s.id = @id
 ORDER BY device_id ASC;
