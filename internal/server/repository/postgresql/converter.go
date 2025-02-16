@@ -10,39 +10,30 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 		return model.Snapshot{}
 	}
 
-	devices := make([]model.Device, 0)
-	currentID := 0
+	deviceParts := make(map[int][]dbSnapshotPart, 1)
 	for _, part := range parts {
-		switch {
-		case part.DeviceID != currentID:
-			currentID = part.DeviceID
-			ifaces := []model.Interface{
-				{
-					Name:      part.InterfaceName,
-					MAC:       part.MAC,
-					IP:        part.IP,
-					MTU:       part.MTU,
-					Bandwidth: part.Bandwidth,
-				},
-			}
-			devices = append(devices, model.Device{
-				Hostname:     part.Hostname,
-				Vendor:       part.VendorName,
-				OSName:       part.OSName,
-				OSVersion:    part.OSVersion,
-				Serial:       part.SerialNumber,
-				ManagementIP: part.ManagementIP,
-				Interfaces:   ifaces,
-			})
-		default:
+		deviceParts[part.DeviceID] = append(deviceParts[part.DeviceID], part)
+	}
+
+	devices := make([]model.Device, len(deviceParts))
+	for _, devicePart := range deviceParts {
+		device := model.Device{
+			Hostname:             devicePart[0].Hostname,
+			Vendor:               devicePart[0].VendorName,
+			OSName:               devicePart[0].OSName,
+			OSVersion:            devicePart[0].OSVersion,
+			Serial:               devicePart[0].SerialNumber,
+			IsSnapshotSuccessful: devicePart[0].IsSnapshotSuccessful,
+		}
+
+		for _, part := range devicePart {
 			iface := model.Interface{
-				Name:      part.InterfaceName,
-				MAC:       part.MAC,
-				IP:        part.IP,
-				MTU:       part.MTU,
-				Bandwidth: part.Bandwidth,
+				Name: part.InterfaceName,
+				IsUp: part.IsUp,
+				IP:   part.IP,
+				MTU:  part.MTU,
 			}
-			devices[len(devices)-1].Interfaces = append(devices[len(devices)-1].Interfaces, iface)
+			device.Interfaces = append(device.Interfaces, iface)
 		}
 	}
 
