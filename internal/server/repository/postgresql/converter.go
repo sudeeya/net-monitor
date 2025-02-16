@@ -16,7 +16,8 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	}
 
 	devices := make([]model.Device, len(deviceParts))
-	for i, devicePart := range deviceParts {
+	devicesIdx := 0
+	for _, devicePart := range deviceParts {
 		device := model.Device{
 			Hostname:             devicePart[0].Hostname,
 			Vendor:               devicePart[0].VendorName,
@@ -36,7 +37,8 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 			device.Interfaces = append(device.Interfaces, iface)
 		}
 
-		devices[i] = device
+		devices[devicesIdx] = device
+		devicesIdx++
 	}
 
 	return model.Snapshot{
