@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS device_states (
 CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
-	name TEXT NOT NULL
+	name TEXT NOT NULL,
+	UNIQUE (device_id, name)
 );
 `
 
@@ -103,9 +104,18 @@ WHERE name = @os AND version = @version;
 `
 
 	insertDeviceQuery = `
-INSERT INTO devices (vendor_id, operating_system_id, hostname, serial_number)
-VALUES (@vendor_id, @operating_system_id, @hostname, @serial_number)
-RETURNING id;
+WITH insert_device AS (
+	INSERT INTO devices (vendor_id, operating_system_id, hostname, serial_number)
+	VALUES (@vendor_id, @operating_system_id, @hostname, @serial_number)
+	ON CONFLICT (hostname) DO NOTHING
+	RETURNING id
+)
+SELECT id 
+FROM insert_device
+UNION
+SELECT id
+FROM devices 
+WHERE hostname = @hostname;
 `
 
 	insertDeviceStateQuery = `
@@ -115,15 +125,23 @@ RETURNING id;
 `
 
 	insertInterfaceQuery = `
-INSERT INTO interfaces (device_id, name, mac)
-VALUES (@device_id, @name, @mac)
-RETURNING id;
+WITH insert_interface AS (
+	INSERT INTO interfaces (device_id, name)
+	VALUES (@device_id, @name)
+	ON CONFLICT (device_id, name) DO NOTHING
+	RETURNING id
+)
+SELECT id 
+FROM insert_interface
+UNION
+SELECT id
+FROM interfaces 
+WHERE device_id = @device_id AND name = @name;
 `
 
 	insertInterfaceStateQuery = `
 INSERT INTO interface_states (interface_id, device_state_id, is_up, ip, mtu)
-VALUES (@interface_id, @device_state_id, @is_up, @ip, @mtu)
-RETURNING id;
+VALUES (@interface_id, @device_state_id, @is_up, @ip, @mtu);
 `
 )
 

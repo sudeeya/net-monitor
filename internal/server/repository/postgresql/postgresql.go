@@ -82,7 +82,8 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 	snapshotArgs := pgx.NamedArgs{
 		"timestamp": snapshot.Timestamp,
 	}
-	if _, err := tx.Exec(ctx, insertSnapshotQuery, snapshotArgs); err != nil {
+	var snapshotID int
+	if err := tx.QueryRow(ctx, insertSnapshotQuery, snapshotArgs).Scan(&snapshotID); err != nil {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			return rollbackErr
 		}
@@ -93,7 +94,20 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 		vendorArgs := pgx.NamedArgs{
 			"vendor": device.Vendor,
 		}
-		if _, err := tx.Exec(ctx, insertVendorQuery, vendorArgs); err != nil {
+		var vendorID int
+		if err := tx.QueryRow(ctx, insertVendorQuery, vendorArgs).Scan(&vendorID); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return rollbackErr
+			}
+			return err
+		}
+
+		osArgs := pgx.NamedArgs{
+			"os":      device.OSName,
+			"version": device.OSVersion,
+		}
+		var osID int
+		if err := tx.QueryRow(ctx, insertOperatingSystemQuery, osArgs).Scan(&osID); err != nil {
 			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 				return rollbackErr
 			}
@@ -101,15 +115,26 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 		}
 
 		deviceArgs := pgx.NamedArgs{
-			"timestamp": snapshot.Timestamp,
-			"vendor":    device.Vendor,
-			"hostname":  device.Hostname,
-			"os":        device.OSName,
-			"version":   device.OSVersion,
-			"serial":    device.Serial,
-			"ip":        device.ManagementIP,
+			"vendor_id":           vendorID,
+			"operating_system_id": osID,
+			"hostname":            device.Hostname,
+			"serial_number":       device.Serial,
 		}
-		if _, err := tx.Exec(ctx, insertDeviceQuery, deviceArgs); err != nil {
+		var deviceID int
+		if err := tx.QueryRow(ctx, insertDeviceQuery, deviceArgs).Scan(&deviceID); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return rollbackErr
+			}
+			return err
+		}
+
+		deviceStateArgs := pgx.NamedArgs{
+			"snapshot_id":            snapshotID,
+			"device_id":              deviceID,
+			"is_snapshot_successful": device.IsSnapshotSuccessful,
+		}
+		var deviceStateID int
+		if err := tx.QueryRow(ctx, insertDeviceStateQuery, deviceStateArgs).Scan(&deviceStateID); err != nil {
 			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 				return rollbackErr
 			}
@@ -118,13 +143,25 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 
 		for _, iface := range device.Interfaces {
 			ifaceArgs := pgx.NamedArgs{
+				"device_id": deviceID,
 				"name":      iface.Name,
-				"mac":       iface.MAC,
-				"ip":        iface.IP,
-				"mtu":       iface.MTU,
-				"bandwidth": iface.Bandwidth,
 			}
-			if _, err := tx.Exec(ctx, insertInterfaceQuery, ifaceArgs); err != nil {
+			var ifaceID int
+			if err := tx.QueryRow(ctx, insertInterfaceQuery, ifaceArgs).Scan(&ifaceID); err != nil {
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					return rollbackErr
+				}
+				return err
+			}
+
+			ifaceStateArgs := pgx.NamedArgs{
+				"interface_id":    ifaceID,
+				"device_state_id": deviceStateID,
+				"is_up":           iface.IsUp,
+				"ip":              iface.IP,
+				"mtu":             iface.MTU,
+			}
+			if _, err := tx.Exec(ctx, insertInterfaceStateQuery, ifaceStateArgs); err != nil {
 				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 					return rollbackErr
 				}
