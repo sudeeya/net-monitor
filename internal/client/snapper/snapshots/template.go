@@ -14,16 +14,14 @@ const (
 
 // Output data.
 const (
-	hostnameOutput     = "HOSTNAME"
-	osOutput           = "OS"
-	versionOutput      = "VERSION"
-	serialOutput       = "SERIAL"
-	managementIPOutput = "MANAGEMENT_IP"
-	interfaceOutput    = "INTERFACE"
-	macAddressOutput   = "MAC_ADDRESS"
-	ipv4Output         = "IPV4"
-	mtuOutput          = "MTU"
-	bandwidthOutput    = "BANDWIDTH"
+	hostnameOutput  = "HOSTNAME"
+	osOutput        = "OS"
+	versionOutput   = "VERSION"
+	serialOutput    = "SERIAL_NUMBER"
+	interfaceOutput = "INTERFACE"
+	stateOutput     = "STATE"
+	ipv4Output      = "IPV4"
+	mtuOutput       = "MTU"
 )
 
 // template defines information needed to examine the configuration of a network device.
@@ -46,6 +44,7 @@ var (
 			file: "templates/nokia_srlinux_show_version.textfsm",
 			outputs: []string{
 				hostnameOutput,
+				serialOutput,
 				osOutput,
 				versionOutput,
 			},
@@ -55,10 +54,9 @@ var (
 			file: "templates/nokia_srlinux_show_interface_detail.textfsm",
 			outputs: []string{
 				interfaceOutput,
-				macAddressOutput,
+				stateOutput,
 				ipv4Output,
 				mtuOutput,
-				bandwidthOutput,
 			},
 		},
 	}
