@@ -3,7 +3,6 @@ package snapshots
 
 import (
 	"encoding/json"
-	"net"
 	"net/netip"
 	"os"
 	"strconv"
@@ -90,9 +89,7 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 		}
 
 		device := model.Device{
-			Hostname: t.cfg.Hostname,
-			Vendor:   vendor,
-			OSName:   t.cfg.OS,
+			Vendor: vendor,
 		}
 
 		ifaces := make([]model.Interface, 0)
@@ -127,24 +124,23 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 					}
 
 					switch output {
+					case hostnameOutput:
+						device.Hostname = value
+					case osOutput:
+						device.OSName = value
 					case versionOutput:
 						device.OSVersion = value
 					case serialOutput:
 						device.Serial = value
-					case managementIPOutput:
-						ip, err := netip.ParsePrefix(value)
-						if err != nil {
-							return nil, err
-						}
-						device.ManagementIP = ip
 					case interfaceOutput:
 						iface.Name = value
-					case macAddressOutput:
-						mac, err := net.ParseMAC(value)
-						if err != nil {
-							return nil, err
+					case stateOutput:
+						switch value {
+						case "up":
+							iface.IsUp = true
+						case "down":
+							iface.IsUp = false
 						}
-						iface.MAC = mac
 					case ipv4Output:
 						ip, err := netip.ParsePrefix(value)
 						if err != nil {
@@ -157,12 +153,6 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 							return nil, err
 						}
 						iface.MTU = int64(mtu)
-					case bandwidthOutput:
-						bandwidth, err := strconv.Atoi(value)
-						if err != nil {
-							return nil, err
-						}
-						iface.Bandwidth = int64(bandwidth)
 					}
 				}
 
