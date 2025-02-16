@@ -166,19 +166,19 @@ SELECT
 	d.id AS device_id,
 	d.hostname,
 	d.serial_number,
-	ds.is_snapshot_successful,
+	d_s.is_snapshot_successful,
 	i.name AS interface_name,
-	is.is_up AS interface_is_up,
-	is.ip,
-	is.mtu
+	i_s.is_up,
+	i_s.ip,
+	i_s.mtu
 FROM
 	devices AS d
 	JOIN vendors AS v ON v.id = d.vendor_id
 	JOIN operating_systems AS o ON o.id = d.operating_system_id
-	JOIN device_states AS ds ON d.id = ds.device_id
-	JOIN snapshots AS s ON s.id = ds.snapshot_id
+	JOIN device_states AS d_s ON d.id = d_s.device_id
+	JOIN snapshots AS s ON s.id = d_s.snapshot_id
 	JOIN interfaces AS i ON d.id = i.device_id
-	JOIN interface_states AS is ON i.id = is.interface_id AND ds.id = is.device_state_id
+	JOIN interface_states AS i_s ON i.id = i_s.interface_id AND d_s.id = i_s.device_state_id
 WHERE
 	s.id = @id
 ORDER BY device_id ASC;
