@@ -151,8 +151,8 @@ SELECT
 	ds.is_snapshot_successful,
 	i.name AS interface_name,
 	is.is_up AS interface_is_up,
-	is.ip AS interface_ip,
-	is.mtu AS interface_mtu
+	is.ip,
+	is.mtu
 FROM
 	devices AS d
 	JOIN vendors AS v ON v.id = d.vendor_id
