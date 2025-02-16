@@ -49,8 +49,6 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 		createTableDeviceStatesQuery,
 		createTableInterfacesQuery,
 		createTableInterfaceStatesQuery,
-		createTableSubinterfacesQuery,
-		createTableSubinterfaceStatesQuery,
 	}
 
 	for _, query := range createTableQueries {

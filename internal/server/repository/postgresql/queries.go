@@ -48,8 +48,7 @@ CREATE TABLE IF NOT EXISTS device_states (
 CREATE TABLE IF NOT EXISTS interfaces (
 	id SERIAL PRIMARY KEY,
 	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
-	name TEXT NOT NULL,
-	mac MACADDR UNIQUE NOT NULL 
+	name TEXT NOT NULL
 );
 `
 
@@ -58,25 +57,6 @@ CREATE TABLE IF NOT EXISTS interface_states (
 	id SERIAL PRIMARY KEY,
 	interface_id INT REFERENCES interfaces(id) ON DELETE CASCADE,
 	device_state_id INT REFERENCES device_states(id) ON DELETE CASCADE,
-	is_up BOOLEAN NOT NULL,
-	ip INET,
-	mtu INT
-);
-`
-
-	createTableSubinterfacesQuery = `
-CREATE TABLE IF NOT EXISTS subinterfaces (
-	id SERIAL PRIMARY KEY,
-	interface_id INT REFERENCES interfaces(id) ON DELETE CASCADE,
-	name TEXT NOT NULL
-);
-`
-
-	createTableSubinterfaceStatesQuery = `
-CREATE TABLE IF NOT EXISTS subinterface_states (
-	id SERIAL PRIMARY KEY,
-	subinterface_id INT REFERENCES subinterfaces(id) ON DELETE CASCADE,
-	interface_state_id INT REFERENCES interface_states(id) ON DELETE CASCADE,
 	is_up BOOLEAN NOT NULL,
 	ip INET,
 	mtu INT
@@ -145,17 +125,6 @@ INSERT INTO interface_states (interface_id, device_state_id, is_up, ip, mtu)
 VALUES (@interface_id, @device_state_id, @is_up, @ip, @mtu)
 RETURNING id;
 `
-
-	insertSubinterfaceQuery = `
-INSERT INTO subinterfaces (interface_id, name)
-VALUES (@interface_id, @name)
-RETURNING id;
-`
-
-	insertSubinterfaceStateQuery = `
-INSERT INTO subinterface_states (subinterface_id, interface_state_id, is_up, ip, mtu)
-VALUES (@subinterface_id, @interface_state_id, @is_up, @ip, @mtu);
-`
 )
 
 // SQL query to get snapshot ids and timestamps.
@@ -181,14 +150,9 @@ SELECT
 	d.serial_number,
 	ds.is_snapshot_successful,
 	i.name AS interface_name,
-	i.mac,
 	is.is_up AS interface_is_up,
 	is.ip AS interface_ip,
-	is.mtu AS interface_mtu,
-	si.name AS subinterface_name,
-	sis.is_up AS subinterface_is_up,
-	sis.ip AS subinterface_ip,
-	sis.mtu AS subinterface_mtu
+	is.mtu AS interface_mtu
 FROM
 	devices AS d
 	JOIN vendors AS v ON v.id = d.vendor_id
@@ -197,8 +161,6 @@ FROM
 	JOIN snapshots AS s ON s.id = ds.snapshot_id
 	JOIN interfaces AS i ON d.id = i.device_id
 	JOIN interface_states AS is ON i.id = is.interface_id AND ds.id = is.device_state_id
-	LEFT JOIN subinterfaces AS si ON i.id = si.interface_id
-	LEFT JOIN subinterface_states AS sis ON si.id = sis.subinterface_id AND is.id = sis.interface_state_id
 WHERE
 	s.id = @id
 ORDER BY device_id ASC;
