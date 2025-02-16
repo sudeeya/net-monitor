@@ -75,22 +75,28 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 			return nil, err
 		}
 
-		s.logger.Sugar().Infof("Trying to connect to %s", t.cfg.Hostname)
-		if err := driver.Open(); err != nil {
-			s.logger.Sugar().Errorf("Failed to connect to %s: %s", t.cfg.Hostname, err.Error())
-			continue
-		}
-		defer driver.Close()
-		s.logger.Sugar().Infof("Connection to %s established", t.cfg.Hostname)
-
 		vendor, err := getVendor(t.cfg.OS)
 		if err != nil {
 			return nil, err
 		}
 
 		device := model.Device{
-			Vendor: vendor,
+			Hostname: t.cfg.Hostname,
+			Vendor:   vendor,
+			OSName:   t.cfg.OS,
 		}
+
+		s.logger.Sugar().Infof("Trying to connect to %s", t.cfg.Hostname)
+		if err := driver.Open(); err != nil {
+			s.logger.Sugar().Errorf("Failed to connect to %s: %s", t.cfg.Hostname, err.Error())
+
+			device.IsSnapshotSuccessful = false
+			devices = append(devices, device)
+
+			continue
+		}
+		defer driver.Close()
+		s.logger.Sugar().Infof("Connection to %s established", t.cfg.Hostname)
 
 		ifaces := make([]model.Interface, 0)
 
@@ -163,6 +169,7 @@ func (s *snapshots) Snap() (*model.Snapshot, error) {
 		}
 
 		device.Interfaces = ifaces
+		device.IsSnapshotSuccessful = true
 
 		devices = append(devices, device)
 	}
