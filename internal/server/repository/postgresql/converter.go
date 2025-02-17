@@ -12,27 +12,27 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 
 	deviceParts := make(map[int][]dbSnapshotPart, 1)
 	for _, part := range parts {
-		deviceParts[part.DeviceID] = append(deviceParts[part.DeviceID], part)
+		deviceParts[int(part.DeviceID.Int64)] = append(deviceParts[int(part.DeviceID.Int64)], part)
 	}
 
 	devices := make([]model.Device, len(deviceParts))
 	devicesIdx := 0
 	for _, devicePart := range deviceParts {
 		device := model.Device{
-			Hostname:             devicePart[0].Hostname,
-			Vendor:               devicePart[0].VendorName,
-			OSName:               devicePart[0].OSName,
-			OSVersion:            devicePart[0].OSVersion,
-			Serial:               devicePart[0].SerialNumber,
-			IsSnapshotSuccessful: devicePart[0].IsSnapshotSuccessful,
+			Hostname:             devicePart[0].Hostname.String,
+			Vendor:               devicePart[0].VendorName.String,
+			OSName:               devicePart[0].OSName.String,
+			OSVersion:            devicePart[0].OSVersion.String,
+			Serial:               devicePart[0].SerialNumber.String,
+			IsSnapshotSuccessful: devicePart[0].IsSnapshotSuccessful.Bool,
 		}
 
 		for _, part := range devicePart {
 			iface := model.Interface{
-				Name: part.InterfaceName,
-				IsUp: part.IsUp,
+				Name: part.InterfaceName.String,
+				IsUp: part.IsUp.Bool,
 				IP:   part.IP,
-				MTU:  part.MTU,
+				MTU:  part.MTU.Int64,
 			}
 			device.Interfaces = append(device.Interfaces, iface)
 		}
@@ -42,7 +42,7 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	}
 
 	return model.Snapshot{
-		Timestamp: parts[0].Timestamp,
+		Timestamp: parts[0].Timestamp.Time,
 		Devices:   devices,
 	}
 }

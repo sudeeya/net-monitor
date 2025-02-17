@@ -177,8 +177,8 @@ FROM
 	JOIN operating_systems AS o ON o.id = d.operating_system_id
 	JOIN device_states AS d_s ON d.id = d_s.device_id
 	JOIN snapshots AS s ON s.id = d_s.snapshot_id
-	JOIN interfaces AS i ON d.id = i.device_id
-	JOIN interface_states AS i_s ON i.id = i_s.interface_id AND d_s.id = i_s.device_state_id
+	LEFT JOIN interfaces AS i ON d.id = i.device_id
+	LEFT JOIN interface_states AS i_s ON i.id = i_s.interface_id AND d_s.id = i_s.device_state_id
 WHERE
 	s.id = @id
 ORDER BY device_id ASC;
