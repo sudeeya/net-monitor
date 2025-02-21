@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
-	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/services"
 )
 
@@ -42,8 +41,8 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 		}
 
 		var response strings.Builder
-		for id, timestamp := range timestamps {
-			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", id, timestamp))); err != nil {
+		for _, timestamp := range timestamps {
+			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", timestamp.ID, timestamp.Timestamp))); err != nil {
 				logger.Error(err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -73,7 +72,7 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 			return
 		}
 
-		snapshot, err := service.GetSnapshot(ctx, model.ID(id))
+		snapshot, err := service.GetSnapshot(ctx, id)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-// ID describes object identifier.
-type ID int
-
 // Snapshot describes a snapshot.
 type Snapshot struct {
+	// Snapshot id.
+	ID int `json:"id"`
+
 	// The time at which the snapshot was created.
 	Timestamp time.Time `json:"timestamp"`
 

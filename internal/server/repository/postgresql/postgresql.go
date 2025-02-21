@@ -174,7 +174,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 }
 
 // GetNTimestamps implements the [Repository] interface.
-func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
+func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) ([]model.Snapshot, error) {
 	p.logger.Sugar().Infof("Getting the last %d timestamps from the database", n)
 
 	args := pgx.NamedArgs{
@@ -191,16 +191,19 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]ti
 		return nil, err
 	}
 
-	timestamps := make(map[model.ID]time.Time, len(dbTimestamps))
-	for _, dbt := range dbTimestamps {
-		timestamps[model.ID(dbt.ID.Int64)] = dbt.Timestamp.Time
+	timestamps := make([]model.Snapshot, len(dbTimestamps))
+	for i, dbt := range dbTimestamps {
+		timestamps[i] = model.Snapshot{
+			ID:        int(dbt.ID.Int64),
+			Timestamp: dbt.Timestamp.Time,
+		}
 	}
 
 	return timestamps, nil
 }
 
 // GetSnapshot implements the [Repository] interface.
-func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
+func (p *postgreSQL) GetSnapshot(ctx context.Context, id int) (model.Snapshot, error) {
 	p.logger.Info("Getting a snapshot from the database")
 
 	args := pgx.NamedArgs{
@@ -221,7 +224,7 @@ func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapsh
 }
 
 // DeleteSnapshot implements the [Repository] interface.
-func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id model.ID) error {
+func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id int) error {
 	p.logger.Info("Deleting a snapshot from the database")
 
 	args := pgx.NamedArgs{
