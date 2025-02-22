@@ -34,10 +34,12 @@ type target struct {
 
 // targetConfig defines device OS and information needed for an SSH connection.
 type targetConfig struct {
-	OS       string `json:"os"`
-	Hostname string `json:"hostname"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	OS             string `json:"os"`
+	Hostname       string `json:"hostname"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	PrivateKeyPath string `json:"private_key_path"`
+	Passphrase     string `json:"passphrase"`
 }
 
 // NewSnapshots returns snapshots object.
@@ -136,14 +138,27 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 		return nil, err
 	}
 
-	driver, err := generic.NewDriver(
-		t.cfg.Hostname,
-		options.WithAuthNoStrictKey(),
-		options.WithAuthUsername(t.cfg.Username),
-		options.WithAuthPassword(t.cfg.Password),
-	)
-	if err != nil {
-		return nil, err
+	var driver *generic.Driver
+	switch {
+	case t.cfg.PrivateKeyPath != "":
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
+		)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	device := &model.Device{
