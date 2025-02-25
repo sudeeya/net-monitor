@@ -15,135 +15,6 @@ import (
 
 const limitInSeconds = 5
 
-// SQL queries to create tables needed to store snapshots.
-const (
-	createTableSnapshotsQuery = `
-CREATE TABLE IF NOT EXISTS snapshots (
-	id SERIAL PRIMARY KEY,
-	timestamp TIMESTAMP UNIQUE NOT NULL
-);
-`
-
-	createTableVendorsQuery = `
-CREATE TABLE IF NOT EXISTS vendors (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) UNIQUE NOT NULL
-);
-`
-
-	createTableDevicesQuery = `
-CREATE TABLE IF NOT EXISTS devices (
-	id SERIAL PRIMARY KEY,
-	snapshot_id INT REFERENCES snapshots(id) ON DELETE CASCADE,
-	vendor_id INT REFERENCES vendors(id) ON DELETE RESTRICT,
-	hostname varchar(255),
-	os_name VARCHAR(255),
-	os_version VARCHAR(255),
-	serial_number VARCHAR(255),
-	management_ip INET
-);
-`
-
-	createTableInterfacesQuery = `
-CREATE TABLE IF NOT EXISTS interfaces (
-	id SERIAL PRIMARY KEY,
-	device_id INT REFERENCES devices(id) ON DELETE CASCADE,
-	name VARCHAR(255),
-	mac MACADDR,
-	ip INET,
-	mtu INT,
-	bandwidth INT
-);
-`
-)
-
-// SQL queries for inserting a snapshot.
-const (
-	insertSnapshotQuery = `
-INSERT INTO snapshots (timestamp)
-VALUES (@timestamp);
-`
-
-	insertVendorQuery = `
-INSERT INTO vendors (name)
-VALUES (@vendor)
-ON CONFLICT (name) DO NOTHING;
-`
-
-	insertDeviceQuery = `
-WITH snapshot_id AS (
-	SELECT id
-	FROM snapshots
-	WHERE timestamp = @timestamp
-), vendor_id AS (
-	SELECT id
-	FROM vendors 
-	WHERE name = @vendor
-)
-INSERT INTO devices (snapshot_id, vendor_id, hostname, os_name, os_version, serial_number, management_ip)
-SELECT s.id, v.id, @hostname, @os, @version, @serial, @ip
-FROM snapshot_id s, vendor_id v;
-`
-
-	insertInterfaceQuery = `
-WITH device_id AS (
-	SELECT id
-	FROM devices 
-	ORDER BY id DESC
-	LIMIT 1
-)
-INSERT INTO interfaces (device_id, name, mac, ip, mtu, bandwidth)
-SELECT d.id, @name, @mac, @ip, @mtu, @bandwidth
-FROM device_id d;
-`
-)
-
-// SQL query to get snapshot ids and timestamps.
-const (
-	selectTimestampsQuery = `
-SELECT id, timestamp
-FROM snapshots
-ORDER BY timestamp DESC
-LIMIT @limit;
-`
-)
-
-// SQL query to get a snapshot.
-const (
-	selectSnapshotQuery = `
-SELECT
-	s.timestamp,
-	v.name AS vendor_name,
-	d.id AS device_id,
-	d.hostname,
-	d.os_name,
-	d.os_version,
-	d.serial_number,
-	d.management_ip,
-	i.name AS interface_name,
-	i.mac,
-	i.ip,
-	i.mtu,
-	i.bandwidth
-FROM
-	snapshots s
-	JOIN devices d ON s.id = d.snapshot_id
-	JOIN vendors v ON v.id = d.vendor_id
-	JOIN interfaces i ON d.id = i.device_id
-WHERE
-	s.id = @id
-ORDER BY device_id ASC;
-`
-)
-
-// SQL query to delete a snapshot.
-const (
-	deleteSnapshotQuery = `
-DELETE FROM snapshots
-WHERE id = @id;
-`
-)
-
 var _ repository.Repository = (*postgreSQL)(nil)
 
 // postgreSQL implements the [Repository] interface.
@@ -173,8 +44,11 @@ func NewPostgreSQL(logger *zap.Logger, dsn string) (*postgreSQL, error) {
 	createTableQueries := []string{
 		createTableSnapshotsQuery,
 		createTableVendorsQuery,
+		createTableOperatingSystemsQuery,
 		createTableDevicesQuery,
+		createTableDeviceStatesQuery,
 		createTableInterfacesQuery,
+		createTableInterfaceStatesQuery,
 	}
 
 	for _, query := range createTableQueries {
@@ -208,7 +82,8 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 	snapshotArgs := pgx.NamedArgs{
 		"timestamp": snapshot.Timestamp,
 	}
-	if _, err := tx.Exec(ctx, insertSnapshotQuery, snapshotArgs); err != nil {
+	var snapshotID int
+	if err := tx.QueryRow(ctx, insertSnapshotQuery, snapshotArgs).Scan(&snapshotID); err != nil {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 			return rollbackErr
 		}
@@ -219,7 +94,20 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 		vendorArgs := pgx.NamedArgs{
 			"vendor": device.Vendor,
 		}
-		if _, err := tx.Exec(ctx, insertVendorQuery, vendorArgs); err != nil {
+		var vendorID int
+		if err := tx.QueryRow(ctx, insertVendorQuery, vendorArgs).Scan(&vendorID); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return rollbackErr
+			}
+			return err
+		}
+
+		osArgs := pgx.NamedArgs{
+			"os":      device.OSName,
+			"version": device.OSVersion,
+		}
+		var osID int
+		if err := tx.QueryRow(ctx, insertOperatingSystemQuery, osArgs).Scan(&osID); err != nil {
 			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 				return rollbackErr
 			}
@@ -227,15 +115,26 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 		}
 
 		deviceArgs := pgx.NamedArgs{
-			"timestamp": snapshot.Timestamp,
-			"vendor":    device.Vendor,
-			"hostname":  device.Hostname,
-			"os":        device.OSName,
-			"version":   device.OSVersion,
-			"serial":    device.Serial,
-			"ip":        device.ManagementIP,
+			"vendor_id":           vendorID,
+			"operating_system_id": osID,
+			"hostname":            device.Hostname,
+			"serial_number":       device.Serial,
 		}
-		if _, err := tx.Exec(ctx, insertDeviceQuery, deviceArgs); err != nil {
+		var deviceID int
+		if err := tx.QueryRow(ctx, insertDeviceQuery, deviceArgs).Scan(&deviceID); err != nil {
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+				return rollbackErr
+			}
+			return err
+		}
+
+		deviceStateArgs := pgx.NamedArgs{
+			"snapshot_id":            snapshotID,
+			"device_id":              deviceID,
+			"is_snapshot_successful": device.IsSnapshotSuccessful,
+		}
+		var deviceStateID int
+		if err := tx.QueryRow(ctx, insertDeviceStateQuery, deviceStateArgs).Scan(&deviceStateID); err != nil {
 			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 				return rollbackErr
 			}
@@ -244,13 +143,25 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 
 		for _, iface := range device.Interfaces {
 			ifaceArgs := pgx.NamedArgs{
+				"device_id": deviceID,
 				"name":      iface.Name,
-				"mac":       iface.MAC,
-				"ip":        iface.IP,
-				"mtu":       iface.MTU,
-				"bandwidth": iface.Bandwidth,
 			}
-			if _, err := tx.Exec(ctx, insertInterfaceQuery, ifaceArgs); err != nil {
+			var ifaceID int
+			if err := tx.QueryRow(ctx, insertInterfaceQuery, ifaceArgs).Scan(&ifaceID); err != nil {
+				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+					return rollbackErr
+				}
+				return err
+			}
+
+			ifaceStateArgs := pgx.NamedArgs{
+				"interface_id":    ifaceID,
+				"device_state_id": deviceStateID,
+				"is_up":           iface.IsUp,
+				"ip":              iface.IP,
+				"mtu":             iface.MTU,
+			}
+			if _, err := tx.Exec(ctx, insertInterfaceStateQuery, ifaceStateArgs); err != nil {
 				if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 					return rollbackErr
 				}
@@ -263,7 +174,7 @@ func (p *postgreSQL) StoreSnapshot(ctx context.Context, snapshot model.Snapshot)
 }
 
 // GetNTimestamps implements the [Repository] interface.
-func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error) {
+func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) ([]model.Snapshot, error) {
 	p.logger.Sugar().Infof("Getting the last %d timestamps from the database", n)
 
 	args := pgx.NamedArgs{
@@ -280,16 +191,19 @@ func (p *postgreSQL) GetNTimestamps(ctx context.Context, n int) (map[model.ID]ti
 		return nil, err
 	}
 
-	timestamps := make(map[model.ID]time.Time, len(dbTimestamps))
-	for _, dbt := range dbTimestamps {
-		timestamps[model.ID(dbt.ID)] = dbt.Timestamp
+	timestamps := make([]model.Snapshot, len(dbTimestamps))
+	for i, dbt := range dbTimestamps {
+		timestamps[i] = model.Snapshot{
+			ID:        int(dbt.ID.Int64),
+			Timestamp: dbt.Timestamp.Time,
+		}
 	}
 
 	return timestamps, nil
 }
 
 // GetSnapshot implements the [Repository] interface.
-func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error) {
+func (p *postgreSQL) GetSnapshot(ctx context.Context, id int) (model.Snapshot, error) {
 	p.logger.Info("Getting a snapshot from the database")
 
 	args := pgx.NamedArgs{
@@ -310,7 +224,7 @@ func (p *postgreSQL) GetSnapshot(ctx context.Context, id model.ID) (model.Snapsh
 }
 
 // DeleteSnapshot implements the [Repository] interface.
-func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id model.ID) error {
+func (p *postgreSQL) DeleteSnapshot(ctx context.Context, id int) error {
 	p.logger.Info("Deleting a snapshot from the database")
 
 	args := pgx.NamedArgs{

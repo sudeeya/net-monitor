@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
-	"github.com/sudeeya/net-monitor/internal/pkg/model"
 	"github.com/sudeeya/net-monitor/internal/server/services"
 )
 
@@ -42,8 +41,8 @@ func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService
 		}
 
 		var response strings.Builder
-		for id, timestamp := range timestamps {
-			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", id, timestamp))); err != nil {
+		for _, timestamp := range timestamps {
+			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", timestamp.ID, timestamp.Timestamp))); err != nil {
 				logger.Error(err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -73,7 +72,7 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 			return
 		}
 
-		snapshot, err := service.GetSnapshot(ctx, model.ID(id))
+		snapshot, err := service.GetSnapshot(ctx, id)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -90,34 +89,6 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write(response); err != nil {
-			logger.Error(err.Error())
-		}
-	}
-}
-
-// DeleteSnapshotHandler returns an http.HandlerFunc that requests the service to delete a snapshot.
-// If an error occurs, it logs the error and returns an appropriate HTTP status code.
-func DeleteSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
-		defer cancel()
-
-		id, err := strconv.Atoi(chi.URLParam(r, "snapshotID"))
-		if err != nil {
-			logger.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if err := service.DeleteSnapshot(ctx, model.ID(id)); err != nil {
-			logger.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("Snapshot is deleted")); err != nil {
 			logger.Error(err.Error())
 		}
 	}

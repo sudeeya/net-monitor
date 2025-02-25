@@ -23,7 +23,8 @@ The client periodically connects to the target devices via SSH and sends command
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl2",
         "username": "admin",
-        "password": "NokiaSrl1!"
+        "private_key_path": "~/.ssh/id_rsa",
+        "passphrase": ""
     }
 ]
 ```
@@ -52,5 +53,4 @@ task run-client
 ```
 To manipulate stored snapshots, use HTTP GET requests. Endpoints:
 * `/timestamps/{n}`: return the last *n* snapshot ids and timestamps;
-* `/snapshot/{id}`: return snapshot by provided *id*;
-* `/delete/{id}`: delete snapshot by provided *id*.
+* `/snapshot/{id}`: return snapshot by provided *id*.

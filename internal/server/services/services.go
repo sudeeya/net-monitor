@@ -3,7 +3,6 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
 )
@@ -16,11 +15,11 @@ type SnapshotsService interface {
 
 	// GetSnapshot returns a snapshot by its id.
 	// Returns an error if the snapshot could not be returned.
-	GetSnapshot(ctx context.Context, id model.ID) (model.Snapshot, error)
+	GetSnapshot(ctx context.Context, id int) (model.Snapshot, error)
 
 	// GetNTimestamps returns the last n snapshot ids and timestamps.
-	GetNTimestamps(ctx context.Context, n int) (map[model.ID]time.Time, error)
+	GetNTimestamps(ctx context.Context, n int) ([]model.Snapshot, error)
 
 	// DeleteSnapshot deletes a snapshot by its id.
-	DeleteSnapshot(ctx context.Context, id model.ID) error
+	DeleteSnapshot(ctx context.Context, id int) error
 }

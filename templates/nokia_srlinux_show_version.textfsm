@@ -1,8 +1,10 @@
 Value HOSTNAME (\S+)
+Value SERIAL_NUMBER (.+)
 Value OS (.+)
 Value VERSION (\S+)
 
 Start
   ^\s*Hostname\s*:\s*${HOSTNAME}
+  ^\s*Serial Number\s*:\s*${SERIAL_NUMBER}
   ^\s*OS\s*:\s*${OS}
   ^\s*Software Version\s*:\s*${VERSION} -> Record

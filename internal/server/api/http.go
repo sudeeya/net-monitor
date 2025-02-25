@@ -12,7 +12,6 @@ import (
 const (
 	getNTimestampsEndpoint = "/timestamps/{timestampsCount}"
 	getSnapshotEndpoint    = "/snapshot/{snapshotID}"
-	deleteSnapshotEndpoint = "/delete/{snapshotID}"
 )
 
 // snapshotsHTTPServer defines object to interact with the server using HTTP.
@@ -39,5 +38,4 @@ func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsServic
 func registerEndpoints(mux *chi.Mux, logger *zap.Logger, service services.SnapshotsService) {
 	mux.Get(getNTimestampsEndpoint, handlers.GetNTimestampsHandler(logger, service))
 	mux.Get(getSnapshotEndpoint, handlers.GetSnapshotHandler(logger, service))
-	mux.Get(deleteSnapshotEndpoint, handlers.DeleteSnapshotHandler(logger, service))
 }

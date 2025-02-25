@@ -4,7 +4,7 @@ package snapshots;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sudeeya/net-monitor/internal/pkg/pb";
+option go_package = "internal/pkg/pb";
 
 service Snapshots {
     rpc SaveSnapshot(SaveSnapshotRequest) returns (SaveSnapshotResponse);
@@ -26,13 +26,12 @@ message Snapshot {
         string os_name = 3;
         string os_version = 4;
         string serial = 5;
-        string management_ip = 6;
+        bool is_snapshot_successful = 6;
         message Interface {
             string name = 1;
-            string mac = 2;
+            bool is_up = 2;
             string ip = 3;
             int64 mtu = 4;
-            int64 bandwidth = 5;
         }
         repeated Interface interfaces = 7;
     }
