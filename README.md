@@ -23,7 +23,7 @@ The client periodically connects to the target devices via SSH and sends command
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl2",
         "username": "admin",
-        "public_key_path": "~/.ssh/id_rsa",
+        "private_key_path": "~/.ssh/id_rsa",
         "passphrase": ""
     }
 ]
