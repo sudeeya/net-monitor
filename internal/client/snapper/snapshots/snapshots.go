@@ -40,6 +40,7 @@ type targetConfig struct {
 	Password       string `json:"password"`
 	PrivateKeyPath string `json:"private_key_path"`
 	Passphrase     string `json:"passphrase"`
+	NoStrictKey    bool   `json:"no_strict_key"`
 }
 
 // NewSnapshots returns snapshots object.
@@ -138,27 +139,9 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 		return nil, err
 	}
 
-	var driver *generic.Driver
-	switch {
-	case t.cfg.PrivateKeyPath != "":
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
-		)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthUsername(t.cfg.Username),
-			options.WithAuthPassword(t.cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
+	driver, err := newTargetDriver(t)
+	if err != nil {
+		return nil, err
 	}
 
 	device := &model.Device{
@@ -254,4 +237,52 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 	device.IsSnapshotSuccessful = true
 
 	return device, nil
+}
+
+func newTargetDriver(t target) (*generic.Driver, error) {
+	var (
+		driver *generic.Driver
+		err    error
+	)
+
+	switch {
+	case t.cfg.PrivateKeyPath != "" && t.cfg.NoStrictKey:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
+		)
+		if err != nil {
+			return nil, err
+		}
+	case t.cfg.PrivateKeyPath != "":
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
+		)
+		if err != nil {
+			return nil, err
+		}
+	case t.cfg.NoStrictKey:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return driver, nil
 }

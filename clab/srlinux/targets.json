@@ -3,12 +3,14 @@
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl1",
         "username": "admin",
-        "password": "NokiaSrl1!"
+        "password": "NokiaSrl1!",
+        "no_strict_key": true
     },
     {
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl2",
         "username": "admin",
-        "password": "NokiaSrl1!"
+        "password": "NokiaSrl1!",
+        "no_strict_key": true
     }
 ]
