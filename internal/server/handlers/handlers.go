@@ -19,6 +19,8 @@ import (
 
 const limitInSeconds = 5
 
+// DefaultHandler returns an http.HandlerFunc that writes default page to the response.
+// If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func DefaultHandler(logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := filepath.Join("assets", "html", "index.html")
@@ -37,7 +39,7 @@ func DefaultHandler(logger *zap.Logger) http.HandlerFunc {
 	}
 }
 
-// GetNTimestampsHandler returns an http.HandlerFunc that requests a list of
+// GetTimestampsHandler returns an http.HandlerFunc that requests a list of
 // snapshot ids and timestamps from the service and writes them to the response.
 // If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func GetTimestampsHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
