@@ -4,11 +4,9 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"text/template"
 	"time"
 
@@ -61,19 +59,18 @@ func GetTimestampsHandler(logger *zap.Logger, service services.SnapshotsService)
 			return
 		}
 
-		var response strings.Builder
-		for _, timestamp := range timestamps {
-			if _, err := response.Write([]byte(fmt.Sprintf("%d: %v\n", timestamp.ID, timestamp.Timestamp))); err != nil {
-				logger.Error(err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		path := filepath.Join("assets", "html", "timestamps.html")
+		tmpl, err := template.ParseFiles(path)
+		if err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte(response.String())); err != nil {
+		if err = tmpl.ExecuteTemplate(w, "timestamps", timestamps); err != nil {
 			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }
