@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
 	"github.com/sudeeya/net-monitor/internal/server/services"
@@ -18,15 +19,33 @@ import (
 
 const limitInSeconds = 5
 
+func DefaultHandler(logger *zap.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Join("assets", "html", "index.html")
+		tmpl, err := template.ParseFiles(path)
+		if err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := tmpl.Execute(w, nil); err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 // GetNTimestampsHandler returns an http.HandlerFunc that requests a list of
 // snapshot ids and timestamps from the service and writes them to the response.
 // If an error occurs, it logs the error and returns an appropriate HTTP status code.
-func GetNTimestampsHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
+func GetTimestampsHandler(logger *zap.Logger, service services.SnapshotsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 		defer cancel()
 
-		n, err := strconv.Atoi(chi.URLParam(r, "timestampsCount"))
+		n, err := strconv.Atoi(r.URL.Query().Get("count"))
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -65,7 +84,7 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 		ctx, cancel := context.WithTimeout(context.Background(), limitInSeconds*time.Second)
 		defer cancel()
 
-		id, err := strconv.Atoi(chi.URLParam(r, "snapshotID"))
+		id, err := strconv.Atoi(r.URL.Query().Get("id"))
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
