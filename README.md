@@ -17,17 +17,22 @@ The client periodically connects to the target devices via SSH and sends command
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl1",
         "username": "admin",
-        "password": "NokiaSrl1!"
+        "password": "NokiaSrl1!",
+        "no_strict_key": true
     },
     {
         "os": "nokia_srlinux",
         "hostname": "clab-srl-srl2",
         "username": "admin",
         "private_key_path": "~/.ssh/id_rsa",
-        "passphrase": ""
+        "passphrase": "",
+        "no_strict_key": true
     }
 ]
 ```
+> [!WARNING]
+> Option `no_strict_key` is used due to containerlab's features, NEVER use this option in prod.
+
 The client then sends the data to the server. Communication between the client and the server uses gRPC.
 
 The server receives data and sends it to the PostgreSQL database for storage.  The data is stored as snapshots – timestamps with a list of devices. HTTP requests are used to retrieve snapshots from the server.
