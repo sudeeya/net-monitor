@@ -6,7 +6,6 @@ import (
 	"net/netip"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -64,34 +63,34 @@ func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
 	}, nil
 }
 
+type snapResult struct {
+	hostname string
+	device   *model.Device
+	err      error
+}
+
 // Snap implements the [Snapper] interface.
 func (s *snapshots) Snap() (*model.Snapshot, error) {
 	timestamp := time.Now()
 	devices := make([]model.Device, 0)
-
-	var wg sync.WaitGroup
-	wg.Add(len(s.targets))
-
-	var mu sync.Mutex
+	resultChan := make(chan snapResult, len(s.targets))
 
 	for _, t := range s.targets {
 		go func(t target) {
-			defer wg.Done()
-
 			device, err := s.snapTarget(t)
-			if err != nil {
-				s.logger.Sugar().Errorf("Failed to snap target %s: %s", t.cfg.Hostname, err.Error())
-
-				return
-			}
-
-			mu.Lock()
-			devices = append(devices, *device)
-			mu.Unlock()
+			resultChan <- snapResult{t.cfg.Hostname, device, err}
 		}(t)
 	}
 
-	wg.Wait()
+	for range len(s.targets) {
+		res := <-resultChan
+
+		if res.err != nil {
+			s.logger.Sugar().Errorf("Failed to snap target %s: %s", res.hostname, res.err.Error())
+		} else {
+			devices = append(devices, *res.device)
+		}
+	}
 
 	return &model.Snapshot{
 		Timestamp: timestamp,
