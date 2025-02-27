@@ -159,6 +159,7 @@ LIMIT @limit;
 const (
 	selectSnapshotQuery = `
 SELECT
+	s.id,
 	s.timestamp,
 	v.name AS vendor_name,
 	o.name AS os_name,
