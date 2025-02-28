@@ -3,7 +3,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -97,17 +96,18 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 			return
 		}
 
-		response, err := json.MarshalIndent(snapshot, "", "\t")
+		path := filepath.Join("assets", "html", "snapshots.html")
+		tmpl, err := template.ParseFiles(path)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write(response); err != nil {
+		if err = tmpl.ExecuteTemplate(w, "snapshots", snapshot); err != nil {
 			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }
