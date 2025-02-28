@@ -42,6 +42,7 @@ func toSnapshotFromDB(parts []dbSnapshotPart) model.Snapshot {
 	}
 
 	return model.Snapshot{
+		ID:        int(parts[0].ID.Int64),
 		Timestamp: parts[0].Timestamp.Time,
 		Devices:   devices,
 	}

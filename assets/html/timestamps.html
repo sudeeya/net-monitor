@@ -1,0 +1,40 @@
+{{define "timestamps"}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Net-Monitor</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"
+        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Timestamps</h1>
+        <nav>
+            <a href="/">Home page</a>
+        </nav>
+    </header>
+    <table>
+        <thead>
+            <tr>
+                <th>Snapshot ID</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .}}
+            <tr>
+                <td><a href="" hx-get="snapshots" hx-vals='{"id":"{{.ID}}"}' hx-target="#snapshot">{{.ID}}</a></td>
+                <td>{{.Timestamp}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    <div id="snapshot"></div>
+</body>
+
+</html>
+{{end}}

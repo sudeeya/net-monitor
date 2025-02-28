@@ -6,7 +6,6 @@ import (
 	"net/netip"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -40,6 +39,7 @@ type targetConfig struct {
 	Password       string `json:"password"`
 	PrivateKeyPath string `json:"private_key_path"`
 	Passphrase     string `json:"passphrase"`
+	NoStrictKey    bool   `json:"no_strict_key"`
 }
 
 // NewSnapshots returns snapshots object.
@@ -63,34 +63,34 @@ func NewSnapshots(logger *zap.Logger, targetsFile string) (*snapshots, error) {
 	}, nil
 }
 
+type snapResult struct {
+	hostname string
+	device   *model.Device
+	err      error
+}
+
 // Snap implements the [Snapper] interface.
 func (s *snapshots) Snap() (*model.Snapshot, error) {
 	timestamp := time.Now()
 	devices := make([]model.Device, 0)
-
-	var wg sync.WaitGroup
-	wg.Add(len(s.targets))
-
-	var mu sync.Mutex
+	resultChan := make(chan snapResult, len(s.targets))
 
 	for _, t := range s.targets {
 		go func(t target) {
-			defer wg.Done()
-
 			device, err := s.snapTarget(t)
-			if err != nil {
-				s.logger.Sugar().Errorf("Failed to snap target %s: %s", t.cfg.Hostname, err.Error())
-
-				return
-			}
-
-			mu.Lock()
-			devices = append(devices, *device)
-			mu.Unlock()
+			resultChan <- snapResult{t.cfg.Hostname, device, err}
 		}(t)
 	}
 
-	wg.Wait()
+	for range len(s.targets) {
+		res := <-resultChan
+
+		if res.err != nil {
+			s.logger.Sugar().Errorf("Failed to snap target %s: %s", res.hostname, res.err.Error())
+		} else {
+			devices = append(devices, *res.device)
+		}
+	}
 
 	return &model.Snapshot{
 		Timestamp: timestamp,
@@ -138,27 +138,9 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 		return nil, err
 	}
 
-	var driver *generic.Driver
-	switch {
-	case t.cfg.PrivateKeyPath != "":
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
-		)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthUsername(t.cfg.Username),
-			options.WithAuthPassword(t.cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
+	driver, err := newTargetDriver(t)
+	if err != nil {
+		return nil, err
 	}
 
 	device := &model.Device{
@@ -254,4 +236,52 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 	device.IsSnapshotSuccessful = true
 
 	return device, nil
+}
+
+func newTargetDriver(t target) (*generic.Driver, error) {
+	var (
+		driver *generic.Driver
+		err    error
+	)
+
+	switch {
+	case t.cfg.PrivateKeyPath != "" && t.cfg.NoStrictKey:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
+		)
+		if err != nil {
+			return nil, err
+		}
+	case t.cfg.PrivateKeyPath != "":
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
+		)
+		if err != nil {
+			return nil, err
+		}
+	case t.cfg.NoStrictKey:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthNoStrictKey(),
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		driver, err = generic.NewDriver(
+			t.cfg.Hostname,
+			options.WithAuthUsername(t.cfg.Username),
+			options.WithAuthPassword(t.cfg.Password),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return driver, nil
 }

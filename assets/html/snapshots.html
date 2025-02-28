@@ -1,0 +1,45 @@
+{{define "snapshots"}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Net-Monitor</title>
+</head>
+
+<body>
+    <header>
+        <h1>Snapshots</h1>
+    </header>
+    <div><strong>Snapshot ID:</strong> {{.ID}}</div>
+    <div><strong>Timestamp:</strong> {{.Timestamp}}</div>
+    {{range .Devices}}
+    <div>
+        <details>
+            <summary>{{.Hostname}}</summary>
+            <div><strong>Vendor:</strong> {{.Vendor}}</div>
+            <div><strong>OS Name:</strong> {{.OSName}}</div>
+            <div><strong>OS Version:</strong> {{.OSVersion}}</div>
+            <div><strong>Serial Number:</strong> {{.Serial}}</div>
+            <div><strong>Snapshot Status:</strong> {{if .IsSnapshotSuccessful}}Success{{else}}Failure{{end}}</div>
+            <div>
+                <details>
+                    <summary>Interfaces</summary>
+                    {{range .Interfaces}}
+                    <div>
+                        <details>
+                            <summary>{{.Name}}</summary>
+                            <div><strong>State:</strong> {{if .IsUp}}Up{{else}}Down{{end}}</div>
+                            <div><strong>IP:</strong> {{.IP}}</div>
+                            <div><strong>MTU:</strong> {{.MTU}}</div>
+                        </details>
+                    </div>
+                    {{end}}
+                </details>
+            </div>
+        </details>
+    </div>
+    {{end}}
+</body>
+
+</html>
+{{end}}
