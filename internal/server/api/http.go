@@ -10,8 +10,9 @@ import (
 
 // Endpoints.
 const (
-	getNTimestampsEndpoint = "/timestamps/{timestampsCount}"
-	getSnapshotEndpoint    = "/snapshot/{snapshotID}"
+	defaultEndpoint       = "/"
+	getTimestampsEndpoint = "/timestamps"
+	getSnapshotEndpoint   = "/snapshots"
 )
 
 // snapshotsHTTPServer defines object to interact with the server using HTTP.
@@ -36,6 +37,7 @@ func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsServic
 
 // registerEndpoints registers enpoints for HTTP requests.
 func registerEndpoints(mux *chi.Mux, logger *zap.Logger, service services.SnapshotsService) {
-	mux.Get(getNTimestampsEndpoint, handlers.GetNTimestampsHandler(logger, service))
+	mux.Get(defaultEndpoint, handlers.DefaultHandler(logger))
+	mux.Get(getTimestampsEndpoint, handlers.GetTimestampsHandler(logger, service))
 	mux.Get(getSnapshotEndpoint, handlers.GetSnapshotHandler(logger, service))
 }

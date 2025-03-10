@@ -14,6 +14,7 @@ type dbTimestamp struct {
 
 // dbSnapshotPart is an auxiliary structure into which the database response is written.
 type dbSnapshotPart struct {
+	ID                   pgtype.Int8        `db:"id"`
 	Timestamp            pgtype.Timestamptz `db:"timestamp"`
 	VendorName           pgtype.Text        `db:"vendor_name"`
 	OSName               pgtype.Text        `db:"os_name"`
