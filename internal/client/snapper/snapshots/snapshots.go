@@ -12,6 +12,7 @@ import (
 
 	"github.com/scrapli/scrapligo/driver/generic"
 	"github.com/scrapli/scrapligo/driver/options"
+	"github.com/scrapli/scrapligo/util"
 
 	"github.com/sudeeya/net-monitor/internal/client/snapper"
 	"github.com/sudeeya/net-monitor/internal/pkg/model"
@@ -239,49 +240,24 @@ func (s *snapshots) snapTarget(t target) (*model.Device, error) {
 }
 
 func newTargetDriver(t target) (*generic.Driver, error) {
-	var (
-		driver *generic.Driver
-		err    error
-	)
+	opts := toOptions(t.cfg)
 
-	switch {
-	case t.cfg.PrivateKeyPath != "" && t.cfg.NoStrictKey:
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
-		)
-		if err != nil {
-			return nil, err
-		}
-	case t.cfg.PrivateKeyPath != "":
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthPrivateKey(t.cfg.PrivateKeyPath, t.cfg.Passphrase),
-		)
-		if err != nil {
-			return nil, err
-		}
-	case t.cfg.NoStrictKey:
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthNoStrictKey(),
-			options.WithAuthUsername(t.cfg.Username),
-			options.WithAuthPassword(t.cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		driver, err = generic.NewDriver(
-			t.cfg.Hostname,
-			options.WithAuthUsername(t.cfg.Username),
-			options.WithAuthPassword(t.cfg.Password),
-		)
-		if err != nil {
-			return nil, err
-		}
+	return generic.NewDriver(t.cfg.Hostname, opts...)
+}
+
+func toOptions(cfg targetConfig) []util.Option {
+	opts := []util.Option{
+		options.WithAuthUsername(cfg.Username),
+		options.WithAuthPassword(cfg.Password),
 	}
 
-	return driver, nil
+	if cfg.PrivateKeyPath != "" {
+		opts = append(opts, options.WithAuthPrivateKey(cfg.PrivateKeyPath, cfg.Passphrase))
+	}
+
+	if cfg.NoStrictKey {
+		opts = append(opts, options.WithAuthNoStrictKey())
+	}
+
+	return opts
 }
