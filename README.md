@@ -37,6 +37,10 @@ The client then sends the data to the server. Communication between the client a
 
 The server receives data and sends it to the PostgreSQL database for storage.  The data is stored as snapshots – timestamps with a list of devices. HTTP requests are used to retrieve snapshots from the server.
 
+The image below shows the project architecture.
+
+![Architecture](assets/images/architecture.svg)
+
 To configure the client and server, `.env` files are used. Check `env` directory for more details.
 
 ## Demo
