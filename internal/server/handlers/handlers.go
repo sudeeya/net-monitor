@@ -3,10 +3,10 @@ package handlers
 
 import (
 	"context"
+	"html/template"
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"text/template"
 	"time"
 
 	"go.uber.org/zap"
