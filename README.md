@@ -61,5 +61,6 @@ task run-server
 task run-client
 ```
 To manipulate stored snapshots, use HTTP GET requests. Endpoints:
-* `/timestamps/{n}`: return the last *n* snapshot ids and timestamps;
-* `/snapshot/{id}`: return snapshot by provided *id*.
+* `/`: main page;
+* `/timestamps?count={count}`: returns the last *count* snapshot ids and timestamps, most likely you will use it through the main page;
+* `/snapshot?id={id}`: returns snapshot by provided *id*, most likely you will use it through the main page.
