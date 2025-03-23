@@ -16,12 +16,19 @@ import (
 
 const limitInSeconds = 5
 
+// Paths to HTML files.
+var (
+	commonPath     = filepath.Join("assets", "html", "common.html")
+	indexPath      = filepath.Join("assets", "html", "index.html")
+	timestampsPath = filepath.Join("assets", "html", "timestamps.html")
+	snapshotsPath  = filepath.Join("assets", "html", "snapshots.html")
+)
+
 // DefaultHandler returns an http.HandlerFunc that writes default page to the response.
 // If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func DefaultHandler(logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join("assets", "html", "index.html")
-		tmpl, err := template.ParseFiles(path)
+		tmpl, err := template.ParseFiles(indexPath, commonPath)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,15 +65,14 @@ func GetTimestampsHandler(logger *zap.Logger, service services.SnapshotsService)
 			return
 		}
 
-		path := filepath.Join("assets", "html", "timestamps.html")
-		tmpl, err := template.ParseFiles(path)
+		tmpl, err := template.ParseFiles(timestampsPath, commonPath)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if err = tmpl.ExecuteTemplate(w, "timestamps", timestamps); err != nil {
+		if err = tmpl.Execute(w, timestamps); err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -96,15 +102,14 @@ func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService) h
 			return
 		}
 
-		path := filepath.Join("assets", "html", "snapshots.html")
-		tmpl, err := template.ParseFiles(path)
+		tmpl, err := template.ParseFiles(snapshotsPath, commonPath)
 		if err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if err = tmpl.ExecuteTemplate(w, "snapshots", snapshot); err != nil {
+		if err = tmpl.Execute(w, snapshot); err != nil {
 			logger.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
