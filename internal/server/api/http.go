@@ -1,6 +1,9 @@
 package api
 
 import (
+	"html/template"
+	"path/filepath"
+
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
@@ -22,22 +25,64 @@ type snapshotsHTTPServer struct {
 	service services.SnapshotsService
 }
 
+// Paths to HTML files.
+var (
+	commonPath     = filepath.Join("assets", "html", "common.html")
+	indexPath      = filepath.Join("assets", "html", "index.html")
+	timestampsPath = filepath.Join("assets", "html", "timestamps.html")
+	snapshotsPath  = filepath.Join("assets", "html", "snapshots.html")
+)
+
 // NewSnapshotsHTTPServer returns snapshotsHTTPServer object.
-func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsService) *snapshotsHTTPServer {
+func NewSnapshotsHTTPServer(logger *zap.Logger, service services.SnapshotsService) (*snapshotsHTTPServer, error) {
 	mux := chi.NewRouter()
 
-	registerEndpoints(mux, logger, service)
+	tmpls, err := parseHTMLFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	registerEndpoints(mux, logger, service, tmpls)
 
 	return &snapshotsHTTPServer{
 		Mux:     mux,
 		logger:  logger,
 		service: service,
+	}, nil
+}
+
+// parseHTMLFiles parses HTML files for enpoints.
+func parseHTMLFiles() (map[string]*template.Template, error) {
+	indexTmpl, err := template.ParseFiles(indexPath, commonPath)
+	if err != nil {
+		return nil, err
 	}
+
+	timestampsTmpl, err := template.ParseFiles(timestampsPath, commonPath)
+	if err != nil {
+		return nil, err
+	}
+
+	snapshotsTmpl, err := template.ParseFiles(snapshotsPath, commonPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]*template.Template{
+		defaultEndpoint:       indexTmpl,
+		getTimestampsEndpoint: timestampsTmpl,
+		getSnapshotEndpoint:   snapshotsTmpl,
+	}, nil
 }
 
 // registerEndpoints registers enpoints for HTTP requests.
-func registerEndpoints(mux *chi.Mux, logger *zap.Logger, service services.SnapshotsService) {
-	mux.Get(defaultEndpoint, handlers.DefaultHandler(logger))
-	mux.Get(getTimestampsEndpoint, handlers.GetTimestampsHandler(logger, service))
-	mux.Get(getSnapshotEndpoint, handlers.GetSnapshotHandler(logger, service))
+func registerEndpoints(
+	mux *chi.Mux,
+	logger *zap.Logger,
+	service services.SnapshotsService,
+	tmpls map[string]*template.Template,
+) {
+	mux.Get(defaultEndpoint, handlers.DefaultHandler(logger, tmpls[defaultEndpoint]))
+	mux.Get(getTimestampsEndpoint, handlers.GetTimestampsHandler(logger, service, tmpls[getTimestampsEndpoint]))
+	mux.Get(getSnapshotEndpoint, handlers.GetSnapshotHandler(logger, service, tmpls[getSnapshotEndpoint]))
 }

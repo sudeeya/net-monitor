@@ -53,7 +53,10 @@ func main() {
 
 	grpcServer := api.NewSnapshotsGRPCServer(logger, service)
 
-	httpServer := api.NewSnapshotsHTTPServer(logger, service)
+	httpServer, err := api.NewSnapshotsHTTPServer(logger, service)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	a := app.NewApp(cfg, logger, repo, httpServer, grpcServer)
 
