@@ -58,7 +58,7 @@ func GetTimestampsHandler(logger *zap.Logger, service services.SnapshotsService,
 }
 
 // GetSnapshotHandler returns an http.HandlerFunc that requests a snapshot
-// from the service and writes it to the response in json format.
+// from the service and writes it to the response.
 // If an error occurs, it logs the error and returns an appropriate HTTP status code.
 func GetSnapshotHandler(logger *zap.Logger, service services.SnapshotsService, tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
