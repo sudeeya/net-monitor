@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -72,20 +73,14 @@ type snapResult struct {
 
 // Snap implements the [Snapper] interface.
 func (s *snapshots) Snap() (*model.Snapshot, error) {
-	timestamp := time.Now()
-	devices := make([]model.Device, 0)
-	resultChan := make(chan snapResult, len(s.targets))
+	var (
+		timestamp = time.Now()
+		devices   = make([]model.Device, 0)
+	)
 
-	for _, t := range s.targets {
-		go func(t target) {
-			device, err := s.snapTarget(t)
-			resultChan <- snapResult{t.cfg.Hostname, device, err}
-		}(t)
-	}
+	results := s.generateDevices()
 
-	for range len(s.targets) {
-		res := <-resultChan
-
+	for res := range results {
 		if res.err != nil {
 			s.logger.Sugar().Errorf("Failed to snap target %s: %s", res.hostname, res.err.Error())
 		} else {
@@ -131,6 +126,30 @@ func formTargets(cfgs []targetConfig) ([]target, error) {
 	}
 
 	return targets, nil
+}
+
+func (s *snapshots) generateDevices() <-chan snapResult {
+	var (
+		ch = make(chan snapResult)
+		wg = &sync.WaitGroup{}
+	)
+
+	for _, t := range s.targets {
+		wg.Add(1)
+		go func(t target) {
+			defer wg.Done()
+
+			device, err := s.snapTarget(t)
+			ch <- snapResult{t.cfg.Hostname, device, err}
+		}(t)
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	return ch
 }
 
 func (s *snapshots) snapTarget(t target) (*model.Device, error) {
