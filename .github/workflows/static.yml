@@ -21,3 +21,11 @@ jobs:
         uses: dominikh/staticcheck-action@v1
         with:
           version: "latest"
+
+      - name: Install djlint
+        run: |
+          pip3 install djlint
+
+      - name: Run djlint
+        run: |
+          djlint assets/html --profile=golang --ignore=H030,H031
